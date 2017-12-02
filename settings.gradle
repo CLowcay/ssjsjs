@@ -15,4 +15,6 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'ssjsjs'
+include  'org.json'
+include  'ssjsjs'
+

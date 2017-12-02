@@ -1,8 +1,16 @@
 package ssjsjs;
 
-import org.json.JSON;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import ssjsjs.annotations.JSONCollection;
 import ssjsjs.annotations.JSONField;
+import ssjsjs.annotations.JSONIgnore;
 import ssjsjs.annotations.JSONMap;
 
 /**
@@ -16,59 +24,63 @@ public class SSJSJS {
 	 * @throws JSONSerializeException if obj cannot be converted to a JSONObject
 	 * */
 	public static JSONObject serialize(final JSONable obj) throws JSONSerializeException {
-		final JSONObject out = new JSONObject;
+		final JSONObject out = new JSONObject();
 
 		try {
 			final Class<?> clazz = obj.getClass();
 			final Field[] fields = clazz.getFields();
 			for (int i = 0; i < fields.length; i++) {
 				final Field f = fields[i];
-				final fieldInfo = f.getAnnotation(JSONField.class);
-				final collectionInfo = f.getAnnotation(JSONCollection.class);
-				final mapInfo = f.getAnnotation(JSONMap.class);
+				final JSONField fieldInfo = f.getAnnotation(JSONField.class);
+				final JSONCollection collectionInfo = f.getAnnotation(JSONCollection.class);
+				final JSONMap mapInfo = f.getAnnotation(JSONMap.class);
 
 				final Type type = f.getGenericType();
 
 				if (fieldInfo != null) {
-					final String alias = fieldInfo.alias == null? f.getName() : fieldInfo.alias;
+					final String alias = fieldInfo.alias() == null? f.getName() : fieldInfo.alias();
 					final Object value = f.get(obj);
-					if (value.class.isPrimitive() || value instanceof String) {
+					if (value.getClass().isPrimitive() || value instanceof String) {
 						out.put(alias, value);
 					} else if (value instanceof JSONable)  {
-						out.put(alias, serialize(value));
+						out.put(alias, serialize((JSONable) value));
 					} else {
 						throw new JSONSerializeException(
 							"Cannot serialize field type " + type.getTypeName());
 					}
 
 				} else if (collectionInfo != null) {
-					final String alias = collectionInfo.alias == null? f.getName() : collectionInfo.alias;
+					final String alias = collectionInfo.alias() == null? f.getName() : collectionInfo.alias();
 					final Object value = f.get(obj);
-					if (!value instanceof Collection)
+					if (!(value instanceof Collection))
 						throw new JSONSerializeException("Field '" + f.getName() +
 							"' was annotated as a Collection, but it isn't a Collection");
-					if (!type instanceof ParameterizedType)
+					if (!(type instanceof ParameterizedType))
 						throw new JSONSerializeException("Cannot serialize non-generic collections");
 
 					out.put(alias, serializeCollection((ParameterizedType) type, (Collection) value));
 
 				} else if (mapInfo != null) {
-					final String alias = mapInfo.alias == null? f.getName() : mapInfo.alias;
+					final String alias = mapInfo.alias() == null? f.getName() : mapInfo.alias();
 					final Object value = f.get(obj);
-					if (!value instanceof Map)
+					if (!(value instanceof Map))
 						throw new JSONSerializeException("Field '" + f.getName() +
 							"' was annotated as a Map, but it isn't a Map");
-					if (!type instanceof ParameterizedType)
+					if (!(type instanceof ParameterizedType))
 						throw new JSONSerializeException("Cannot serialize non-generic maps");
 
 					out.put(alias, serializeMap((ParameterizedType) type, (Map) value));
+
+				} else if (f.getAnnotation(JSONIgnore.class) != null) {
+					/* ignore this field */
 
 				} else if (isFinal(f) && isStatic(f)) {
 					throw new JSONSerializeException("Final instance field '" +
 						f.getName() + "' requires ssjsjs annotation");
 				}
-
 			}
+
+			return out;
 		} catch (final IllegalAccessException
 			| IllegalArgumentException
 			| NullPointerException
@@ -103,7 +115,7 @@ public class SSJSJS {
 			|| String.class.isAssignableFrom(elementClass) || isRecursive
 		) {
 			for (final Object element : collection)
-				out2.add(isRecursive? serialize(element) : element);
+				out2.put(isRecursive? serialize((JSONable) element) : element);
 		} else {
 			throw new JSONSerializeException(
 				"Cannot serialize element type: " + elementClass);
@@ -113,10 +125,10 @@ public class SSJSJS {
 	}
 
 	private static JSONObject serializeMap(
-		final ParameterizedType type, final Map<?, ?> map
+		final ParameterizedType type, final Map<?, ?> map0
 	) throws JSONSerializeException, ClassCastException {
 
-		final JSONObject out2 = new JSONArray();
+		final JSONObject out2 = new JSONObject();
 
 		final Type[] args = type.getActualTypeArguments();
 		if (args.length != 2) throw
@@ -128,14 +140,16 @@ public class SSJSJS {
 		if (!String.class.isAssignableFrom(keyClass))
 			throw new JSONSerializeException("Map keys must be Strings");
 
+		@SuppressWarnings("unchecked") final Map<String, ?> map = (Map<String, ?>) map0;
+
 		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
 
 		if (elementClass.isPrimitive()
 			|| String.class.isAssignableFrom(elementClass) || isRecursive
 		) {
-			for (final String key : map.getKeys()) {
+			for (final String key : map.keySet()) {
 				final Object value = map.get(key);
-				out2.put(key, isRecursive? serialize(value) : value);
+				out2.put(key, isRecursive? serialize((JSONable) value) : value);
 			}
 
 		} else {
@@ -155,6 +169,7 @@ public class SSJSJS {
 	public static <T extends JSONable> T deserialize(final JSONObject json)
 		throws JSONDeserializeException
 	{
+		return null;
 	}
 }
 

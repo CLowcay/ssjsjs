@@ -6,9 +6,9 @@ package ssjsjs.annotations;
  * @param nullable true if this field is allowed to be null, otherwise false
  * @param defaultValue the default value to use when deserializing this field
  * */
-@interface JSONField {
-	String alias() default null;
+public @interface JSONField {
+	String alias();
 	boolean nullable() default false;
-	Object defaultValue() default null;
+	String defaultValue();
 }
 
