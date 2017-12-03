@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ssjsjs.annotations.AliasFor;
+import ssjsjs.annotations.Alias;
 import ssjsjs.annotations.JSONConstructor;
 
 /**
@@ -36,51 +36,45 @@ public class SSJSJS {
 
 			for (int i = 0; i < parameters.length; i++) {
 				final Parameter p = parameters[i];
-				final String name = p.getName();
 				final Type type = p.getParameterizedType();
 
-				final AliasFor alias = p.getAnnotation(AliasFor.class);
-				final String fieldName = alias == null? p.getName() : alias.field();
+				final Alias alias = p.getAnnotation(Alias.class);
+				if (alias == null) throw new JSONSerializeException(
+					"Missing required @Alias annotation for field " + p.getName());
+
+				final String fieldName = alias.value();
 				final Field f = clazz.getField(fieldName);
 
-				if (f.getType().isAssignableFrom(p.getType())
-					&& p.getType().isAssignableFrom(f.getType())
-				) {
-					final Object value = f.get(obj);
+				final Object value = f.get(obj);
 
-					if (value instanceof Collection) {
-						if (!((Class<?>) type).isAssignableFrom(Collection.class))
-							throw new JSONSerializeException("Collection parameters must be declared Collection<T>");
+				if (value instanceof Collection) {
+					if (!p.getType().isAssignableFrom(Collection.class))
+						throw new JSONSerializeException("Collection parameters must be declared Collection<T>");
 
-						if (!(type instanceof ParameterizedType))
-							throw new JSONSerializeException("Cannot serialize non-generic collections");
+					if (!(type instanceof ParameterizedType))
+						throw new JSONSerializeException("Cannot serialize non-generic collections");
 
-						out.put(name,
-							serializeCollection((ParameterizedType) type, (Collection) value));
+					out.put(fieldName,
+						serializeCollection((ParameterizedType) type, (Collection) value));
 
-					} else if (value instanceof Map) {
-						if (!((Class<?>) type).isAssignableFrom(Map.class))
-							throw new JSONSerializeException("Map parameters must be declared Map<T>");
+				} else if (value instanceof Map) {
+					if (!p.getType().isAssignableFrom(Map.class))
+						throw new JSONSerializeException("Map parameters must be declared Map<T>");
 
-						if (!(type instanceof ParameterizedType))
-							throw new JSONSerializeException("Cannot serialize non-generic maps");
+					if (!(type instanceof ParameterizedType))
+						throw new JSONSerializeException("Cannot serialize non-generic maps");
 
-						out.put(name, serializeMap((ParameterizedType) type, (Map) value));
+					out.put(fieldName, serializeMap((ParameterizedType) type, (Map) value));
 
-					} else if (value instanceof JSONable) {
-						out.put(name, serialize((JSONable) value));
+				} else if (value instanceof JSONable) {
+					out.put(fieldName, serialize((JSONable) value));
 
-					} else if (value.getClass().isPrimitive() || value instanceof String) {
-						out.put(name, value);
+				} else if (isJSONPrimitive(f.getType())) {
+					out.put(fieldName, makeJSONPrimitive(value));
 
-					} else {
-						throw new JSONSerializeException(
-							"Cannot serialize field type " + f.getGenericType().getTypeName());
-					}
 				} else {
-					throw new JSONSerializeException("Type mismatch error, field '" +
-						f.getName() + "' is not type compatible with constructor argument '" +
-						p.getName() + "'");
+					throw new JSONSerializeException(
+						"Cannot serialize field '" + fieldName + "' of type " + f.getGenericType().getTypeName());
 				}
 			}
 
@@ -94,6 +88,35 @@ public class SSJSJS {
 			| ExceptionInInitializerError e) {
 			throw new JSONSerializeException(e);
 		}
+	}
+
+	private static boolean isJSONPrimitive(final Class<?> clazz) {
+		return 
+			(Number.class.isAssignableFrom(clazz)) ||
+			(Character.class.isAssignableFrom(clazz)) ||
+			(Boolean.class.isAssignableFrom(clazz)) ||
+			(String.class.isAssignableFrom(clazz)) ||
+			clazz == byte.class ||
+			clazz == char.class ||
+			clazz == short.class ||
+			clazz == int.class ||
+			clazz == long.class ||
+			clazz == float.class ||
+			clazz == double.class ||
+			clazz == boolean.class;
+	}
+
+	private static Object makeJSONPrimitive(final Object obj) {
+		if (obj instanceof Byte) return obj;
+		else if (obj instanceof Character) return Character.toString(((Character) obj).charValue());
+		else if (obj instanceof Short) return obj;
+		else if (obj instanceof Integer) return obj;
+		else if (obj instanceof Long) return obj;
+		else if (obj instanceof Float) return obj;
+		else if (obj instanceof Double) return obj;
+		else if (obj instanceof Boolean) return obj;
+		else if (obj instanceof String) return obj;
+		else return null;
 	}
 
 	/**
@@ -113,11 +136,18 @@ public class SSJSJS {
 
 			for (int i = 0; i < parameters.length; i++) {
 				final Parameter p = parameters[i];
+
+				final Alias alias = p.getAnnotation(Alias.class);
+				if (alias == null) throw new JSONDeserializeException(
+					"Missing required @Alias annotation for parameter " + p.getName());
+
+				final String fieldName = alias.value();
+
 				values[i] = deserializeField(
-					p.getName(),
+					fieldName,
 					(Class<?>) p.getType(),
 					p.getParameterizedType(),
-					json.get(p.getName()));
+					json.opt(fieldName));
 			}
 
 			return constructor.newInstance(values);
@@ -141,7 +171,7 @@ public class SSJSJS {
 		return Modifier.isStatic(f.getModifiers());
 	}
 
-	private static <T> Constructor<T> getJSONConstructor(Class<T> clazz)
+	private static <T> Constructor<T> getJSONConstructor(final Class<T> clazz)
 		throws JSONSerializeException, SecurityException
 	{
 			final Constructor<?>[] constructors = clazz.getConstructors();
@@ -176,9 +206,7 @@ public class SSJSJS {
 		final Class<?> elementClass = (Class<?>) args[0];
 		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
 
-		if (elementClass.isPrimitive()
-			|| String.class.isAssignableFrom(elementClass) || isRecursive
-		) {
+		if (isJSONPrimitive(elementClass) || isRecursive) {
 			for (final Object element : collection)
 				out2.put(isRecursive? serialize((JSONable) element) : element);
 		} else {
@@ -209,9 +237,7 @@ public class SSJSJS {
 
 		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
 
-		if (elementClass.isPrimitive()
-			|| String.class.isAssignableFrom(elementClass) || isRecursive
-		) {
+		if (isJSONPrimitive(elementClass) || isRecursive) {
 			for (final String key : map.keySet()) {
 				final Object value = map.get(key);
 				out2.put(key, isRecursive? serialize((JSONable) value) : value);
@@ -234,18 +260,29 @@ public class SSJSJS {
 		if (value == null || intendedClass.isInstance(value)) {
 			return value;
 
+		} else if (value instanceof String &&
+			((String) value).length() == 1 &&
+			(intendedClass.isAssignableFrom(Character.class) || intendedClass.isAssignableFrom(char.class))
+		) {
+			return ((String) value).charAt(0);
+
+		} else if (value instanceof Boolean &&
+			(intendedClass.isAssignableFrom(Boolean.class) || intendedClass.isAssignableFrom(boolean.class))
+		) {
+			return value;
+
 		} else if (value instanceof Number) {
-			if (intendedClass.isAssignableFrom(Byte.class)) {
+			if (intendedClass.isAssignableFrom(Byte.class) || intendedClass.isAssignableFrom(byte.class)) {
 				return ((Number) value).byteValue();
-			} else if (intendedClass.isAssignableFrom(Double.class)) {
+			} else if (intendedClass.isAssignableFrom(Double.class) || intendedClass.isAssignableFrom(double.class)) {
 				return ((Number) value).doubleValue();
-			} else if (intendedClass.isAssignableFrom(Float.class)) {
+			} else if (intendedClass.isAssignableFrom(Float.class) || intendedClass.isAssignableFrom(float.class)) {
 				return ((Number) value).floatValue();
-			} else if (intendedClass.isAssignableFrom(Integer.class)) {
+			} else if (intendedClass.isAssignableFrom(Integer.class) || intendedClass.isAssignableFrom(int.class)) {
 				return ((Number) value).intValue();
-			} else if (intendedClass.isAssignableFrom(Long.class)) {
+			} else if (intendedClass.isAssignableFrom(Long.class) || intendedClass.isAssignableFrom(long.class)) {
 				return ((Number) value).longValue();
-			} else if (intendedClass.isAssignableFrom(Short.class)) {
+			} else if (intendedClass.isAssignableFrom(Short.class) || intendedClass.isAssignableFrom(short.class)) {
 				return ((Number) value).shortValue();
 			} else {
 				throw new JSONDeserializeException("Expected a '" +
