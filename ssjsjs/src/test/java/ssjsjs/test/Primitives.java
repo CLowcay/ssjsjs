@@ -1,6 +1,6 @@
 package ssjsjs.test;
 
-import ssjsjs.annotations.Alias;
+import ssjsjs.annotations.Field;
 import ssjsjs.annotations.JSONConstructor;
 import ssjsjs.JSONable;
 
@@ -16,6 +16,15 @@ public class Primitives implements JSONable {
 	public final String stringVal1;
 	public final String stringVal2;
 
+	public final Byte bbyteVal;
+	public final Character bcharVal;
+	public final Short bshortVal;
+	public final Integer bintVal;
+	public final Long blongVal;
+	public final Float bfloatVal;
+	public final Double bdoubleVal;
+	public final Boolean bbooleanVal;
+
 	public Primitives(final byte x) {
 		this.byteVal = (byte) (42 + x);
 		this.charVal = (char) ('z' + x);
@@ -27,20 +36,37 @@ public class Primitives implements JSONable {
 		this.booleanVal = (x % 2) == 0;
 		this.stringVal1 = "It's a string " + x;
 		this.stringVal2 =  null;
+
+		this.bbyteVal = (byte) (this.byteVal + x);
+		this.bcharVal = (char) (charVal + x);
+		this.bshortVal = (short) (shortVal + x);
+		this.bintVal = intVal + (int) x;
+		this.blongVal = longVal + (long) x;
+		this.bfloatVal = floatVal + (float) x;
+		this.bdoubleVal = doubleVal + (double) x;
+		this.bbooleanVal = !booleanVal;
 	}
 
 	@JSONConstructor
 	public Primitives(
-		@Alias("byteVal") final byte byteVal,
-		@Alias("charVal") final char charVal,
-		@Alias("shortVal") final short shortVal,
-		@Alias("intVal") final int intVal,
-		@Alias("longVal") final long longVal,
-		@Alias("floatVal") final float floatVal,
-		@Alias("doubleVal") final double doubleVal,
-		@Alias("booleanVal") final boolean booleanVal,
-		@Alias("stringVal1") final String stringVal1,
-		@Alias("stringVal2") final String stringVal2
+		@Field("byteVal") final byte byteVal,
+		@Field("charVal") final char charVal,
+		@Field("shortVal") final short shortVal,
+		@Field("intVal") final int intVal,
+		@Field("longVal") final long longVal,
+		@Field("floatVal") final float floatVal,
+		@Field("doubleVal") final double doubleVal,
+		@Field("booleanVal") final boolean booleanVal,
+		@Field("stringVal1") final String stringVal1,
+		@Field("stringVal2") final String stringVal2,
+		@Field("bbyteVal") final Byte bbyteVal,
+		@Field("bcharVal") final Character bcharVal,
+		@Field("bshortVal") final Short bshortVal,
+		@Field("bintVal") final Integer bintVal,
+		@Field("blongVal") final Long blongVal,
+		@Field("bfloatVal") final Float bfloatVal,
+		@Field("bdoubleVal") final Double bdoubleVal,
+		@Field("bbooleanVal") final Boolean bbooleanVal
 	) {
 		this.byteVal = byteVal;
 		this.charVal = charVal;
@@ -52,6 +78,15 @@ public class Primitives implements JSONable {
 		this.booleanVal = booleanVal;
 		this.stringVal1 = stringVal1;
 		this.stringVal2 = stringVal2;
+
+		this.bbyteVal = bbyteVal;
+		this.bcharVal =  bcharVal;
+		this.bshortVal = bshortVal;
+		this.bintVal = bintVal;
+		this.blongVal = blongVal;
+		this.bfloatVal = bfloatVal;
+		this.bdoubleVal = bdoubleVal;
+		this.bbooleanVal = bbooleanVal;
 	}
 
 	@Override
@@ -66,7 +101,15 @@ public class Primitives implements JSONable {
 			"  " + doubleVal + "\n" +
 			"  " + booleanVal + "\n" +
 			"  " + stringVal1 + "\n" +
-			"  " + stringVal2;
+			"  " + stringVal2 + "\n" +
+			"  " + bbyteVal + "\n" +
+			"  " + bcharVal + "\n" +
+			"  " + bshortVal + "\n" +
+			"  " + bintVal + "\n" +
+			"  " + blongVal + "\n" +
+			"  " + bfloatVal + "\n" +
+			"  " + bdoubleVal + "\n" +
+			"  " + bbooleanVal;
 	}
 
 	@Override
@@ -95,7 +138,15 @@ public class Primitives implements JSONable {
 				this.doubleVal == o.doubleVal &&
 				this.booleanVal == o.booleanVal &&
 				(this.stringVal1 == null? o.stringVal1 == null : this.stringVal1.equals(o.stringVal1)) &&
-				(this.stringVal2 == null? o.stringVal2 == null : this.stringVal2.equals(o.stringVal2));
+				(this.stringVal2 == null? o.stringVal2 == null : this.stringVal2.equals(o.stringVal2)) &&
+				this.bbyteVal.equals(o.bbyteVal) &&
+				this.bcharVal.equals(o.bcharVal) &&
+				this.bshortVal.equals(o.bshortVal) &&
+				this.bintVal.equals(o.bintVal) &&
+				this.blongVal.equals(o.blongVal) &&
+				this.bfloatVal.equals(o.bfloatVal) &&
+				this.bdoubleVal.equals(o.bdoubleVal) &&
+				this.bbooleanVal.equals(o.bbooleanVal);
 		}
 	}
 }

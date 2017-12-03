@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import ssjsjs.JSONable;
-import ssjsjs.annotations.Alias;
+import ssjsjs.annotations.Field;
 import ssjsjs.annotations.JSONConstructor;
 
 public class WithMaps implements JSONable {
@@ -42,11 +42,11 @@ public class WithMaps implements JSONable {
 
 	@JSONConstructor
 	public WithMaps(
-		@Alias("emptyMap") final Map<String, Integer> emptyMap,
-		@Alias("numbers") final Map<String, Integer> numbers,
-		@Alias("strings") final Map<String, String> strings,
-		@Alias("primitives") final Map<String, Primitives> primitives,
-		@Alias("collections") final Map<String, WithCollections> collections
+		@Field("emptyMap") final Map<String, Integer> emptyMap,
+		@Field("numbers") final Map<String, Integer> numbers,
+		@Field("strings") final Map<String, String> strings,
+		@Field("primitives") final Map<String, Primitives> primitives,
+		@Field("collections") final Map<String, WithCollections> collections
 	) {
 		this.emptyMap = emptyMap;
 		this.numbers = numbers;

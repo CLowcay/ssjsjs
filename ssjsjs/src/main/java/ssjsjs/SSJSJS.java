@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ssjsjs.annotations.Alias;
 import ssjsjs.annotations.JSONConstructor;
 
 /**
@@ -38,7 +37,7 @@ public class SSJSJS {
 				final Parameter p = parameters[i];
 				final Type type = p.getParameterizedType();
 
-				final Alias alias = p.getAnnotation(Alias.class);
+				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
 				if (alias == null) throw new JSONSerializeException(
 					"Missing required @Alias annotation for field " + p.getName());
 
@@ -137,7 +136,7 @@ public class SSJSJS {
 			for (int i = 0; i < parameters.length; i++) {
 				final Parameter p = parameters[i];
 
-				final Alias alias = p.getAnnotation(Alias.class);
+				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
 				if (alias == null) throw new JSONDeserializeException(
 					"Missing required @Alias annotation for parameter " + p.getName());
 

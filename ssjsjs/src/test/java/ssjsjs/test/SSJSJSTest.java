@@ -15,7 +15,7 @@ public class SSJSJSTest {
 	}
 
 	@Test
-	public void primitives() throws Exception {
+	public void primitivesRoundtrip() throws Exception {
 		final Primitives obj = new Primitives((byte) 0);
 		final Primitives obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), Primitives.class);
 		assertEquals(obj, obj2);
@@ -75,6 +75,13 @@ public class SSJSJSTest {
 		final WithMaps obj3 = new WithMaps(42);
 		final WithMaps obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), WithMaps.class);
 		assertEquals(obj3, obj4);
+	}
+
+	@Test
+	public void emptyBoxes() throws Exception {
+		final EmptyBoxes obj = new EmptyBoxes();
+		final EmptyBoxes obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), EmptyBoxes.class);
+		assertEquals(obj, obj2);
 	}
 }
 

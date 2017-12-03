@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import ssjsjs.annotations.Alias;
+import ssjsjs.annotations.Field;
 import ssjsjs.annotations.JSONConstructor;
 import ssjsjs.JSONable;
 
@@ -46,11 +46,11 @@ public class WithCollections implements JSONable {
 
 	@JSONConstructor
 	public WithCollections(
-		@Alias("emptyList") final Collection<Integer> emptyList,
-		@Alias("numbers") final Collection<Integer> numbers,
-		@Alias("strings") final Collection<String> strings,
-		@Alias("primitives1") final Collection<Primitives> primitives1,
-		@Alias("primitives2") final Collection<Primitives> primitives2
+		@Field("emptyList") final Collection<Integer> emptyList,
+		@Field("numbers") final Collection<Integer> numbers,
+		@Field("strings") final Collection<String> strings,
+		@Field("primitives1") final Collection<Primitives> primitives1,
+		@Field("primitives2") final Collection<Primitives> primitives2
 	) {
 		this.emptyList = new ArrayList<>(emptyList);
 		this.numbers = new LinkedList<>(numbers);

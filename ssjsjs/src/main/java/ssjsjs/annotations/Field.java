@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface Alias {
+public @interface Field {
 	String value();
 }
 
