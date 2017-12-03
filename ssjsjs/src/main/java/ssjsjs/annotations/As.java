@@ -6,12 +6,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify the name of the field that supplies the value for this constructor
- * parameter.
+ * Specify the name of the field in the JSON, if different to the name of the
+ * field in the java object.
  * */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface Field {
+public @interface As {
 	String value();
 }
 

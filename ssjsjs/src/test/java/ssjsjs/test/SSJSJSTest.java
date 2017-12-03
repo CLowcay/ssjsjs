@@ -83,5 +83,28 @@ public class SSJSJSTest {
 		final EmptyBoxes obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), EmptyBoxes.class);
 		assertEquals(obj, obj2);
 	}
+
+	@Test
+	public void customLabelsRoundtrip() throws Exception {
+		final CustomLabels obj = new CustomLabels();
+		final CustomLabels obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), CustomLabels.class);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void customLabelsOutput() throws Exception {
+		final CustomLabels obj = new CustomLabels();
+		final JSONObject out = SSJSJS.serialize(obj);
+
+		assertTrue(out.has("a"));
+		assertTrue(out.has("custom"));
+		assertFalse(out.has("b"));
+
+		assertTrue(out.get("a") instanceof String);
+		assertTrue(out.get("custom") instanceof String);
+
+		assertEquals(obj.a, out.get("a"));
+		assertEquals(obj.b, out.get("custom"));
+	}
 }
 

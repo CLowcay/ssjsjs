@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import ssjsjs.annotations.As;
 import ssjsjs.annotations.JSONConstructor;
 
 /**
@@ -39,9 +40,13 @@ public class SSJSJS {
 
 				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
 				if (alias == null) throw new JSONSerializeException(
-					"Missing required @Alias annotation for field " + p.getName());
+					"Missing required @Field annotation for field " + p.getName());
 
 				final String fieldName = alias.value();
+
+				final As as  = p.getAnnotation(As.class);
+				final String outputFieldName = as == null? fieldName : as.value();
+
 				final Field f = clazz.getField(fieldName);
 
 				final Object value = f.get(obj);
@@ -53,7 +58,7 @@ public class SSJSJS {
 					if (!(type instanceof ParameterizedType))
 						throw new JSONSerializeException("Cannot serialize non-generic collections");
 
-					out.put(fieldName,
+					out.put(outputFieldName,
 						serializeCollection((ParameterizedType) type, (Collection) value));
 
 				} else if (value instanceof Map) {
@@ -63,13 +68,13 @@ public class SSJSJS {
 					if (!(type instanceof ParameterizedType))
 						throw new JSONSerializeException("Cannot serialize non-generic maps");
 
-					out.put(fieldName, serializeMap((ParameterizedType) type, (Map) value));
+					out.put(outputFieldName, serializeMap((ParameterizedType) type, (Map) value));
 
 				} else if (value instanceof JSONable) {
-					out.put(fieldName, serialize((JSONable) value));
+					out.put(outputFieldName, serialize((JSONable) value));
 
 				} else if (isJSONPrimitive(f.getType())) {
-					out.put(fieldName, makeJSONPrimitive(value));
+					out.put(outputFieldName, makeJSONPrimitive(value));
 
 				} else {
 					throw new JSONSerializeException(
@@ -138,9 +143,10 @@ public class SSJSJS {
 
 				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
 				if (alias == null) throw new JSONDeserializeException(
-					"Missing required @Alias annotation for parameter " + p.getName());
+					"Missing required @Field annotation for parameter " + p.getName());
 
-				final String fieldName = alias.value();
+				final As as = p.getAnnotation(As.class);
+				final String fieldName = as == null? alias.value() : as.value();
 
 				values[i] = deserializeField(
 					fieldName,
