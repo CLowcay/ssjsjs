@@ -10,7 +10,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import ssjsjs.annotations.As;
@@ -46,6 +48,9 @@ public class SSJSJS {
 
 				final As as  = p.getAnnotation(As.class);
 				final String outputFieldName = as == null? fieldName : as.value();
+
+				if (out.has(outputFieldName)) throw new JSONSerializeException(
+					"Duplicate field name: " + outputFieldName);
 
 				final Field f = clazz.getField(fieldName);
 
@@ -133,6 +138,11 @@ public class SSJSJS {
 		final JSONObject json, final Class<T> clazz
 	) throws JSONDeserializeException
 	{
+		if (!JSONable.class.isAssignableFrom(clazz)) throw new JSONDeserializeException(
+			"Cannot deserialize object of type " + clazz);
+
+		final Set<String> seen = new HashSet<>();
+
 		try {
 			final Constructor<T> constructor = getJSONConstructor(clazz);
 			final Parameter[] parameters = constructor.getParameters();
@@ -147,6 +157,10 @@ public class SSJSJS {
 
 				final As as = p.getAnnotation(As.class);
 				final String fieldName = as == null? alias.value() : as.value();
+
+				if (seen.contains(fieldName)) throw new JSONDeserializeException(
+					"Duplicate field '" + fieldName + "' in class '" + clazz + "'");
+				seen.add(fieldName);
 
 				values[i] = deserializeField(
 					fieldName,
@@ -262,8 +276,22 @@ public class SSJSJS {
 		final Type intendedType,
 		final Object value
 	) throws JSONDeserializeException {
-		if (value == null || intendedClass.isInstance(value)) {
-			return value;
+		if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
+			if (!(
+				JSONable.class.isAssignableFrom(intendedClass) ||
+				String.class.isAssignableFrom(intendedClass) ||
+				Byte.class.isAssignableFrom(intendedClass) ||
+				Short.class.isAssignableFrom(intendedClass) ||
+				Integer.class.isAssignableFrom(intendedClass) ||
+				Long.class.isAssignableFrom(intendedClass) ||
+				Double.class.isAssignableFrom(intendedClass) ||
+				Float.class.isAssignableFrom(intendedClass) ||
+				Boolean.class.isAssignableFrom(intendedClass) ||
+				Character.class.isAssignableFrom(intendedClass)
+			)) throw new JSONDeserializeException(
+				"Cannot deserialize field '" + fieldName + "' of type '" + intendedClass + "'");
+
+			return value == JSONObject.NULL? null : value;
 
 		} else if (value instanceof String &&
 			((String) value).length() == 1 &&

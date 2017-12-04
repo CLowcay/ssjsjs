@@ -3,6 +3,9 @@ package ssjsjs.test;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
+import ssjsjs.JSONable;
+import ssjsjs.JSONDeserializeException;
+import ssjsjs.JSONSerializeException;
 import ssjsjs.SSJSJS;
 import static org.junit.Assert.*;
 
@@ -18,6 +21,14 @@ public class SSJSJSTest {
 	public void primitivesRoundtrip() throws Exception {
 		final Primitives obj = new Primitives((byte) 0);
 		final Primitives obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), Primitives.class);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void primitivesLongRoundtrip() throws Exception {
+		final Primitives obj = new Primitives((byte) 0);
+		final Primitives obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj).toString()), Primitives.class);
 		assertEquals(obj, obj2);
 	}
 
@@ -55,6 +66,14 @@ public class SSJSJSTest {
 	}
 
 	@Test
+	public void collectionsLongRoundtrip() throws Exception {
+		final WithCollections obj = new WithCollections(0);
+		final WithCollections obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj).toString()), WithCollections.class);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
 	public void collectionsOutput() throws Exception {
 		final WithCollections obj = new WithCollections(0);
 		final JSONObject out = SSJSJS.serialize(obj);
@@ -78,6 +97,19 @@ public class SSJSJSTest {
 	}
 
 	@Test
+	public void mapsLongRoundtrip() throws Exception {
+		final WithMaps obj = new WithMaps(0);
+		final WithMaps obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj).toString()), WithMaps.class);
+		assertEquals(obj, obj2);
+
+		final WithMaps obj3 = new WithMaps(42);
+		final WithMaps obj4 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj3).toString()), WithMaps.class);
+		assertEquals(obj3, obj4);
+	}
+
+	@Test
 	public void emptyBoxes() throws Exception {
 		final EmptyBoxes obj = new EmptyBoxes();
 		final EmptyBoxes obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), EmptyBoxes.class);
@@ -88,6 +120,14 @@ public class SSJSJSTest {
 	public void customLabelsRoundtrip() throws Exception {
 		final CustomLabels obj = new CustomLabels();
 		final CustomLabels obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), CustomLabels.class);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void customLabelsLongRoundtrip() throws Exception {
+		final CustomLabels obj = new CustomLabels();
+		final CustomLabels obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj).toString()), CustomLabels.class);
 		assertEquals(obj, obj2);
 	}
 
@@ -105,6 +145,70 @@ public class SSJSJSTest {
 
 		assertEquals(obj.a, out.get("a"));
 		assertEquals(obj.b, out.get("custom"));
+	}
+
+	@Test(expected = JSONSerializeException.class)
+	public void requireConstructorAnnotation() throws Exception {
+		SSJSJS.serialize(new NoConstructorAnnotation());
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void requireConstructorAnnotation2() throws Exception {
+		final JSONObject obj = new JSONObject();
+		SSJSJS.deserialize(obj, NoConstructorAnnotation.class);
+	}
+
+	@Test(expected = JSONSerializeException.class)
+	public void requireFieldAnnotations() throws Exception {
+		SSJSJS.serialize(new MissingFieldAnnotation("v1", "v2"));
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void requireFieldAnnotations2() throws Exception {
+		final JSONObject obj = new JSONObject();
+		obj.put("a", "v1");
+		obj.put("b", "v2");
+		SSJSJS.deserialize(obj, MissingFieldAnnotation.class);
+	}
+
+	@Test(expected = JSONSerializeException.class)
+	public void cannotSerializeArbitraryFields() throws Exception {
+		SSJSJS.serialize(new UnserializableField(new StringBuilder()));
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeArbitraryFields() throws Exception {
+		final JSONObject obj = new JSONObject();
+		obj.put("a", "This cannot be deserialized");
+		SSJSJS.deserialize(obj, UnserializableField.class);
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeArbitraryFields2() throws Exception {
+		final JSONObject obj = new JSONObject();
+		SSJSJS.deserialize(obj, UnserializableField.class);
+	}
+
+	@Test(expected = JSONSerializeException.class)
+	public void cannotSerializeDuplicateAliases() throws Exception {
+		SSJSJS.serialize(new DuplicateAliases("v1", "v2"));
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeDuplicateAliases() throws Exception {
+		final JSONObject obj = new JSONObject();
+		obj.put("a", "It's a string");
+		SSJSJS.deserialize(obj, DuplicateAliases.class);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeArbitraryObjects() throws Exception {
+		final JSONObject obj = new JSONObject();
+		obj.put("a",1);
+		obj.put("b",2);
+		final Class<?> clazz = NotSerializable.class;
+		SSJSJS.deserialize(obj, (Class<JSONable>) clazz);
 	}
 }
 
