@@ -147,6 +147,44 @@ public class SSJSJSTest {
 		assertEquals(obj.b, out.get("custom"));
 	}
 
+	@Test
+	public void enumFieldsRoundtrip() throws Exception {
+		final WithEnums obj1 = new WithEnums(WithEnums.SomeEnum.SOME_VALUE);
+		final WithEnums obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj1).toString()), WithEnums.class);
+		assertEquals(obj1, obj2);
+
+		final WithEnums obj3 = new WithEnums(WithEnums.SomeEnum.SOME_OTHER_VALUE);
+		final WithEnums obj4 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj3).toString()), WithEnums.class);
+		assertEquals(obj3, obj4);
+	}
+
+	@Test
+	public void enumFieldsLongRoundtrip() throws Exception {
+		final WithEnums obj1 = new WithEnums(WithEnums.SomeEnum.SOME_VALUE);
+		final WithEnums obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj1), WithEnums.class);
+		assertEquals(obj1, obj2);
+
+		final WithEnums obj3 = new WithEnums(WithEnums.SomeEnum.SOME_OTHER_VALUE);
+		final WithEnums obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), WithEnums.class);
+		assertEquals(obj3, obj4);
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeBadEnumValue() throws Exception {
+		final JSONObject json = new JSONObject();
+		json.put("enumField", "NOT_A_VALID_VALUE");
+		SSJSJS.deserialize(json, WithEnums.class);
+	}
+
+	@Test
+	public void privateFieldsRoundtrip() throws Exception {
+		final WithPrivateFields obj = new WithPrivateFields("whatever");
+		final WithPrivateFields obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), WithPrivateFields.class);
+		assertEquals(obj, obj2);
+	}
+
 	@Test(expected = JSONSerializeException.class)
 	public void requireConstructorAnnotation() throws Exception {
 		SSJSJS.serialize(new NoConstructorAnnotation());

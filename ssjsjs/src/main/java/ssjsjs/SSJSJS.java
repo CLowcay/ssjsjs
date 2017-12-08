@@ -52,7 +52,8 @@ public class SSJSJS {
 				if (out.has(outputFieldName)) throw new JSONSerializeException(
 					"Duplicate field name: " + outputFieldName);
 
-				final Field f = clazz.getField(fieldName);
+				final Field f = clazz.getDeclaredField(fieldName);
+				f.setAccessible(true);
 
 				final Object value = f.get(obj);
 
@@ -80,6 +81,9 @@ public class SSJSJS {
 
 				} else if (isJSONPrimitive(f.getType())) {
 					out.put(outputFieldName, makeJSONPrimitive(value));
+
+				} else if (value.getClass().isEnum()) {
+					out.put(outputFieldName, value.toString());
 
 				} else {
 					throw new JSONSerializeException(
@@ -293,11 +297,23 @@ public class SSJSJS {
 
 			return value == JSONObject.NULL? null : value;
 
-		} else if (value instanceof String &&
-			((String) value).length() == 1 &&
-			(intendedClass.isAssignableFrom(Character.class) || intendedClass.isAssignableFrom(char.class))
-		) {
-			return ((String) value).charAt(0);
+		} else if (value instanceof String) {
+			if (((String) value).length() == 1 &&
+				(intendedClass.isAssignableFrom(Character.class)
+					|| intendedClass.isAssignableFrom(char.class))
+			) {
+				return ((String) value).charAt(0);
+			} else if (intendedClass.isEnum()) {
+				try {
+					@SuppressWarnings("unchecked") final Object r =
+						Enum.valueOf((Class) intendedClass, (String) value);
+					return r;
+				} catch (final IllegalArgumentException e) {
+					throw new JSONDeserializeException(e);
+				}
+			} else {
+				return value;
+			}
 
 		} else if (value instanceof Boolean &&
 			(intendedClass.isAssignableFrom(Boolean.class) || intendedClass.isAssignableFrom(boolean.class))
