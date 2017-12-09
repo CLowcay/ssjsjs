@@ -12,6 +12,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface Field {
+	/**
+	 * The name of the field that supplies the value when serializing.
+	 * */
 	String value();
 }
 

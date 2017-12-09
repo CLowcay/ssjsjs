@@ -16,6 +16,7 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import ssjsjs.annotations.As;
+import ssjsjs.annotations.Implicit;
 import ssjsjs.annotations.JSONConstructor;
 
 /**
@@ -41,8 +42,12 @@ public class SSJSJS {
 				final Type type = p.getParameterizedType();
 
 				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
-				if (alias == null) throw new JSONSerializeException(
-					"Missing required @Field annotation for field " + p.getName());
+				if (alias == null) {
+					if (p.isAnnotationPresent(Implicit.class)) continue;
+
+					throw new JSONSerializeException(
+						"Missing required @Field  or @Implicit annotation for field " + p.getName());
+				}
 
 				final String fieldName = alias.value();
 
@@ -135,11 +140,26 @@ public class SSJSJS {
 	/**
 	 * Deserialize an object from JSON
 	 * @param json the JSONObject to deserialize
+	 * @param class the class to deserialize as
 	 * @return the deserialized object
 	 * @throws JSONDeserializeException if json cannot be safely deserialized
 	 * */
 	public static <T extends JSONable> T deserialize(
 		final JSONObject json, final Class<T> clazz
+	) throws JSONDeserializeException {
+		return deserialize(json, clazz, null);
+	}
+
+	/**
+	 * Deserialize an object from JSON
+	 * @param json the JSONObject to deserialize
+	 * @param class the class to deserialize as
+	 * @param environment a global environment that supplies the values of implicit fields (may be null)
+	 * @return the deserialized object
+	 * @throws JSONDeserializeException if json cannot be safely deserialized
+	 * */
+	public static <T extends JSONable> T deserialize(
+		final JSONObject json, final Class<T> clazz, final Map<String, Object> environment
 	) throws JSONDeserializeException
 	{
 		if (!JSONable.class.isAssignableFrom(clazz)) throw new JSONDeserializeException(
@@ -156,8 +176,23 @@ public class SSJSJS {
 				final Parameter p = parameters[i];
 
 				final ssjsjs.annotations.Field alias = p.getAnnotation(ssjsjs.annotations.Field.class);
-				if (alias == null) throw new JSONDeserializeException(
-					"Missing required @Field annotation for parameter " + p.getName());
+				if (alias == null) {
+					final Implicit envVariable = p.getAnnotation(Implicit.class);
+					if (envVariable != null) {
+						values[i] = environment == null? null : environment.get(envVariable.value());
+						if (values[i] != null && !p.getType().isInstance(values[i])) {
+							throw new JSONDeserializeException(
+								"Wrong type for implicit field '" + envVariable.value() +
+								"', expected a " + p.getType().getTypeName() +
+								" but got a " + values[i].getClass().getTypeName());
+						} else {
+							continue;
+						}
+					} else {
+						throw new JSONDeserializeException(
+							"Missing required @Field  or @Implicit annotation for parameter " + p.getName());
+					}
+				}
 
 				final As as = p.getAnnotation(As.class);
 				final String fieldName = as == null? alias.value() : as.value();

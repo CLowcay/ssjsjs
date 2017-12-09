@@ -6,14 +6,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify the name of the field in the JSON, if different to the name of the
- * field in the java object.
+ * Mark a constructor argument as being supplied from the environment during
+ * deserialization, and not part of the serialized output.
  * */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface As {
+public @interface Implicit {
 	/**
-	 * The name to use for this field in the JSON output.
+	 * The key by which this value will be looked up during deserialization.
 	 * */
 	String value();
 }

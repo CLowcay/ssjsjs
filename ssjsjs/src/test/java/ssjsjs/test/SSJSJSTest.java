@@ -1,5 +1,7 @@
 package ssjsjs.test;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -183,6 +185,35 @@ public class SSJSJSTest {
 		final WithPrivateFields obj = new WithPrivateFields("whatever");
 		final WithPrivateFields obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), WithPrivateFields.class);
 		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void implicitRoundtrip() throws Exception {
+		final Map<String, Object> env = new HashMap<>();
+		env.put("fromEnv", new WierdType("example"));
+		final ImplicitFields obj = new ImplicitFields("whatever", (WierdType) env.get("fromEnv"));
+		final ImplicitFields obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), ImplicitFields.class, env);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void missingImplicit() throws Exception {
+		final JSONObject json = new JSONObject();
+		json.put("something", "good");
+		final ImplicitFields obj = SSJSJS.deserialize(json, ImplicitFields.class);
+		assertNull(obj.implicit);
+		assertEquals("good", obj.something);
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void wrongTypeImplicit() throws Exception {
+		final JSONObject json = new JSONObject();
+		json.put("something", "good");
+
+		final Map<String, Object> env = new HashMap<>();
+		env.put("fromEnv", "wrong type");
+
+		final ImplicitFields obj = SSJSJS.deserialize(json, ImplicitFields.class, env);
 	}
 
 	@Test(expected = JSONSerializeException.class)
