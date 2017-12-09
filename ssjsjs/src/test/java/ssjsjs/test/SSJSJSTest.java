@@ -216,6 +216,22 @@ public class SSJSJSTest {
 		final ImplicitFields obj = SSJSJS.deserialize(json, ImplicitFields.class, env);
 	}
 
+	@Test
+	public void arraysRoundtrip() throws Exception {
+		final WithArrays obj = new WithArrays();
+		System.err.println(SSJSJS.serialize(obj));
+		final WithArrays obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), WithArrays.class);
+		assertEquals(obj, obj2);
+	}
+
+	@Test
+	public void arraysLongRoundtrip() throws Exception {
+		final WithArrays obj = new WithArrays();
+		final WithArrays obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj).toString()), WithArrays.class);
+		assertEquals(obj, obj2);
+	}
+
 	@Test(expected = JSONSerializeException.class)
 	public void requireConstructorAnnotation() throws Exception {
 		SSJSJS.serialize(new NoConstructorAnnotation());

@@ -1,5 +1,9 @@
 package ssjsjs.test;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import ssjsjs.annotations.Field;
 import ssjsjs.annotations.JSONConstructor;
 import ssjsjs.JSONable;
@@ -10,12 +14,31 @@ public class WithEnums implements JSONable {
 	}
 
 	public final SomeEnum enumField;
+	public final Collection<SomeEnum> enums;
+	public final Map<String, SomeEnum> enumDictionary;
+	public final SomeEnum[] arrayEnums;
+
+	public WithEnums(
+		final SomeEnum enumField
+	) {
+		this.enumField = enumField;
+		enums = List.of(enumField);
+		enumDictionary = new HashMap<>();
+		enumDictionary.put("first", enumField);
+		arrayEnums = new SomeEnum[] {enumField};
+	}
 
 	@JSONConstructor
 	public WithEnums(
-		@Field("enumField") final SomeEnum enumField
+		@Field("enumField") final SomeEnum enumField,
+		@Field("enums") final Collection<SomeEnum> enums,
+		@Field("enumDictionary") final Map<String, SomeEnum> enumDictionary,
+		@Field("arrayEnums") final SomeEnum[] arrayEnums
 	) {
 		this.enumField = enumField;
+		this.enums = enums;
+		this.enumDictionary = enumDictionary;
+		this.arrayEnums = arrayEnums;
 	}
 
 	@Override

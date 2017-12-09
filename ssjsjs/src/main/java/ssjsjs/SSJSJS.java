@@ -1,5 +1,6 @@
 package ssjsjs;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -8,9 +9,11 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.json.JSONArray;
@@ -84,11 +87,15 @@ public class SSJSJS {
 				} else if (value instanceof JSONable) {
 					out.put(outputFieldName, serialize((JSONable) value));
 
-				} else if (isJSONPrimitive(f.getType())) {
+				} else if (value == null || isJSONPrimitive(f.getType())) {
 					out.put(outputFieldName, makeJSONPrimitive(value));
 
 				} else if (value.getClass().isEnum()) {
 					out.put(outputFieldName, value.toString());
+
+				} else if (value.getClass().isArray()) {
+					final Class<?> elementType = value.getClass().getComponentType();
+					out.put(outputFieldName, serializeArray(value, elementType));
 
 				} else {
 					throw new JSONSerializeException(
@@ -208,6 +215,8 @@ public class SSJSJS {
 					json.opt(fieldName));
 			}
 
+			System.err.println("All values:" + Arrays.toString(values));
+
 			return constructor.newInstance(values);
 
 		} catch (final SecurityException
@@ -251,6 +260,53 @@ public class SSJSJS {
 			return constructor;
 	}
 
+	private static JSONArray serializeArray(
+		final Object array, final Class<?> elementClass
+	) throws JSONSerializeException, ClassCastException {
+		final JSONArray out = new JSONArray();
+
+		List<Object> collection;
+		if (array instanceof byte[]) {
+			final byte[] a = (byte[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof char[]) {
+			final char[] a = (char[]) array;
+			for (int i = 0; i < a.length; i++) out.put(String.valueOf(a[i]));
+		} else if (array instanceof short[]) {
+			final short[] a = (short[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof int[]) {
+			final int[] a = (int[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof long[]) {
+			final long[] a = (long[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof float[]) {
+			final float[] a = (float[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof double[]) {
+			final double[] a = (double[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else if (array instanceof boolean[]) {
+			final boolean[] a = (boolean[]) array;
+			for (int i = 0; i < a.length; i++) out.put(a[i]);
+		} else {
+			final Object[] a = (Object[]) array;
+			if (isJSONPrimitive(elementClass)) {
+				for (int i = 0; i < a.length; i++) out.put(a[i]);
+			} else if (elementClass.isEnum()) {
+				for (int i = 0; i < a.length; i++) out.put(a[i].toString());
+			} else if (JSONable.class.isAssignableFrom(elementClass)) {
+				for (int i = 0; i < a.length; i++) out.put(serialize((JSONable) a[i]));
+			} else {
+				throw new JSONSerializeException(
+					"Cannot serialize array element type: " + elementClass);
+			}
+		}
+
+		return out;
+	}
+
 	private static JSONArray serializeCollection(
 		final ParameterizedType type, final Collection<?> collection
 	) throws JSONSerializeException, ClassCastException {
@@ -262,14 +318,16 @@ public class SSJSJS {
 			new JSONSerializeException("Expect one type argument for collection types");
 
 		final Class<?> elementClass = (Class<?>) args[0];
-		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
 
-		if (isJSONPrimitive(elementClass) || isRecursive) {
-			for (final Object element : collection)
-				out2.put(isRecursive? serialize((JSONable) element) : element);
+		if (isJSONPrimitive(elementClass)) {
+			for (final Object element : collection) out2.put(element);
+		} else if (elementClass.isEnum()) {
+			for (final Object element : collection) out2.put(element.toString());
+		} else if (JSONable.class.isAssignableFrom(elementClass)) {
+			for (final Object element : collection) out2.put(serialize((JSONable) element));
 		} else {
 			throw new JSONSerializeException(
-				"Cannot serialize element type: " + elementClass);
+				"Cannot serialize collection element type: " + elementClass);
 		}
 
 		return out2;
@@ -295,15 +353,15 @@ public class SSJSJS {
 
 		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
 
-		if (isJSONPrimitive(elementClass) || isRecursive) {
-			for (final String key : map.keySet()) {
-				final Object value = map.get(key);
-				out2.put(key, isRecursive? serialize((JSONable) value) : value);
-			}
-
+		if (isJSONPrimitive(elementClass)) {
+			for (final String key : map.keySet()) out2.put(key, map.get(key));
+		} else if (elementClass.isEnum()) {
+			for (final String key : map.keySet()) out2.put(key, map.get(key).toString());
+		} else if (JSONable.class.isAssignableFrom(elementClass)) {
+			for (final String key : map.keySet()) out2.put(key, serialize((JSONable) map.get(key)));
 		} else {
 			throw new JSONSerializeException(
-				"Cannot serialize element type: " + elementClass);
+				"Cannot serialize map element type: " + elementClass);
 		}
 
 		return out2;
@@ -326,7 +384,10 @@ public class SSJSJS {
 				Double.class.isAssignableFrom(intendedClass) ||
 				Float.class.isAssignableFrom(intendedClass) ||
 				Boolean.class.isAssignableFrom(intendedClass) ||
-				Character.class.isAssignableFrom(intendedClass)
+				Character.class.isAssignableFrom(intendedClass) ||
+				intendedClass.isAssignableFrom(Collection.class) ||
+				intendedClass.isAssignableFrom(Map.class) ||
+				intendedClass.isEnum() || intendedClass.isArray()
 			)) throw new JSONDeserializeException(
 				"Cannot deserialize field '" + fieldName + "' of type '" + intendedClass + "'");
 
@@ -381,7 +442,7 @@ public class SSJSJS {
 			return (Object) deserialize((JSONObject) value, deserializeAs);
 
 		} else if (value instanceof JSONArray
-			&& intendedClass.isAssignableFrom(Collection.class)
+			&& (intendedClass.isAssignableFrom(Collection.class) || intendedClass.isArray())
 		) {
 			if (intendedType instanceof ParameterizedType) {
 				final Type[] typeArgs = ((ParameterizedType) intendedType).getActualTypeArguments();
@@ -400,6 +461,60 @@ public class SSJSJS {
 				}
 
 				return array;
+
+			} else if (((Class<?>) intendedType).isArray()) {
+				final List<Object> array = new ArrayList<>();
+				final Class<?> elementClass = ((Class<?>) intendedType).getComponentType();
+
+				for (final Object innerValue : (JSONArray) value) {
+					array.add(deserializeField(
+						fieldName + "[]",
+						elementClass,
+						elementClass,
+						innerValue));
+				}
+
+				if (elementClass.isAssignableFrom(byte.class)) {
+					final byte[] r = new byte[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Byte) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(char.class)) {
+					final char[] r = new char[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Character) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(short.class)) {
+					final short[] r = new short[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Short) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(int.class)) {
+					final int[] r = new int[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Integer) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(long.class)) {
+					final long[] r = new long[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Long) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(float.class)) {
+					final float[] r = new float[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Float) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(double.class)) {
+					final double[] r = new double[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Double) array.get(i);
+					return r;
+				} else if (elementClass.isAssignableFrom(boolean.class)) {
+					final boolean[] r = new boolean[array.size()];
+					for (int i = 0; i < r.length; i++) r[i] = (Boolean) array.get(i);
+					return r;
+				} else {
+					try {
+						return array.toArray((Object[]) Array.newInstance(elementClass, 0));
+					} catch (final IllegalArgumentException e) {
+						throw new JSONDeserializeException(
+							"Cannot create array of type '" + intendedType.getTypeName() +
+							"' for field '" + fieldName + "'");
+					}
+				}
 
 			} else {
 				throw new JSONDeserializeException(
@@ -440,7 +555,7 @@ public class SSJSJS {
 
 		} else {
 			throw new JSONDeserializeException("Cannot deserialize field '" +
-				fieldName + "' of type '" + fieldName + "' from object of type '" +
+				fieldName + "' of type '" + intendedType.getTypeName() + "' from object of type '" +
 				value.getClass() + "' (did you forget to make it JSONable?)");
 		}
 	}
