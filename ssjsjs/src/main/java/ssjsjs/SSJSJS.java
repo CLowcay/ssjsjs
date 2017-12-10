@@ -508,7 +508,10 @@ public class SSJSJS {
 					return r;
 				} else {
 					try {
-						return array.toArray((Object[]) Array.newInstance(elementClass, 0));
+						final Object[] outArray = (Object[]) Array.newInstance(elementClass, array.size());
+						for (int i = 0; i < outArray.length; i++) outArray[i] = array.get(i);
+						return outArray;
+
 					} catch (final IllegalArgumentException e) {
 						throw new JSONDeserializeException(
 							"Cannot create array of type '" + intendedType.getTypeName() +
