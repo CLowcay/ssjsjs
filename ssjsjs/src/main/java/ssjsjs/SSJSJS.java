@@ -187,7 +187,10 @@ public class SSJSJS {
 					final Implicit envVariable = p.getAnnotation(Implicit.class);
 					if (envVariable != null) {
 						values[i] = environment == null? null : environment.get(envVariable.value());
-						if (values[i] != null && !p.getType().isInstance(values[i])) {
+						if (values[i] == null) {
+							throw new JSONDeserializeException(
+								"Missing value for implicit field '" + envVariable.value() + "'");
+						} else if (!p.getType().isInstance(values[i])) {
 							throw new JSONDeserializeException(
 								"Wrong type for implicit field '" + envVariable.value() +
 								"', expected a " + p.getType().getTypeName() +

@@ -196,13 +196,11 @@ public class SSJSJSTest {
 		assertEquals(obj, obj2);
 	}
 
-	@Test
+	@Test(expected = JSONDeserializeException.class)
 	public void missingImplicit() throws Exception {
 		final JSONObject json = new JSONObject();
 		json.put("something", "good");
 		final ImplicitFields obj = SSJSJS.deserialize(json, ImplicitFields.class);
-		assertNull(obj.implicit);
-		assertEquals("good", obj.something);
 	}
 
 	@Test(expected = JSONDeserializeException.class)
