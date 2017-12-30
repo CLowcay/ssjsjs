@@ -152,6 +152,17 @@ public class SSJSJSTest {
 	@Test
 	public void enumFieldsRoundtrip() throws Exception {
 		final WithEnums obj1 = new WithEnums(WithEnums.SomeEnum.SOME_VALUE);
+		final WithEnums obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj1), WithEnums.class);
+		assertEquals(obj1, obj2);
+
+		final WithEnums obj3 = new WithEnums(WithEnums.SomeEnum.SOME_OTHER_VALUE);
+		final WithEnums obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), WithEnums.class);
+		assertEquals(obj3, obj4);
+	}
+
+	@Test
+	public void enumFieldsLongRoundtrip() throws Exception {
+		final WithEnums obj1 = new WithEnums(WithEnums.SomeEnum.SOME_VALUE);
 		final WithEnums obj2 = SSJSJS.deserialize(
 			new JSONObject(SSJSJS.serialize(obj1).toString()), WithEnums.class);
 		assertEquals(obj1, obj2);
@@ -163,13 +174,27 @@ public class SSJSJSTest {
 	}
 
 	@Test
-	public void enumFieldsLongRoundtrip() throws Exception {
-		final WithEnums obj1 = new WithEnums(WithEnums.SomeEnum.SOME_VALUE);
-		final WithEnums obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj1), WithEnums.class);
+	public void optionalFieldsRoundtrip() throws Exception {
+		final WithOptionals obj1 = new WithOptionals(true);
+		final WithOptionals obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj1), WithOptionals.class);
+		System.err.println("optional fields json: " + SSJSJS.serialize(obj1));
 		assertEquals(obj1, obj2);
 
-		final WithEnums obj3 = new WithEnums(WithEnums.SomeEnum.SOME_OTHER_VALUE);
-		final WithEnums obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), WithEnums.class);
+		final WithOptionals obj3 = new WithOptionals(false);
+		final WithOptionals obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), WithOptionals.class);
+		assertEquals(obj3, obj4);
+	}
+
+	@Test
+	public void optionalFieldsLongRoundtrip() throws Exception {
+		final WithOptionals obj1 = new WithOptionals(true);
+		final WithOptionals obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj1).toString()), WithOptionals.class);
+		assertEquals(obj1, obj2);
+
+		final WithOptionals obj3 = new WithOptionals(false);
+		final WithOptionals obj4 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj3).toString()), WithOptionals.class);
 		assertEquals(obj3, obj4);
 	}
 

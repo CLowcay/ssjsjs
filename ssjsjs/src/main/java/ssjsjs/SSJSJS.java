@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -83,6 +84,32 @@ public class SSJSJS {
 						throw new JSONSerializeException("Cannot serialize non-generic maps");
 
 					out.put(outputFieldName, serializeMap((ParameterizedType) type, (Map) value));
+
+				} else if (value instanceof Optional) {
+					if (!(type instanceof ParameterizedType))
+						throw new JSONSerializeException("Cannot serialize non-generic optionals");
+
+						final Type[] args = ((ParameterizedType) type).getActualTypeArguments();
+						if (args.length != 1) throw
+							new JSONSerializeException("Expect one type argument for optional types");
+
+						@SuppressWarnings("unchecked")
+						final Object innerValue = ((Optional<Object>) value).orElse(null);
+						final Class<?> elementClass = (Class<?>) args[0];
+
+						// swap the null types
+						if (innerValue == null) {
+							/* do nothing */
+						} else if (isJSONPrimitive(elementClass)) {
+							out.put(outputFieldName, innerValue);
+						} else if (elementClass.isEnum()) {
+							out.put(outputFieldName, innerValue.toString());
+						} else if (JSONable.class.isAssignableFrom(elementClass)) {
+							out.put(outputFieldName, serialize((JSONable) innerValue));
+						} else {
+							throw new JSONSerializeException(
+								"Cannot serialize collection element type: " + elementClass);
+						}
 
 				} else if (value instanceof JSONable) {
 					out.put(outputFieldName, serialize((JSONable) value));
@@ -217,8 +244,6 @@ public class SSJSJS {
 					p.getParameterizedType(),
 					json.opt(fieldName));
 			}
-
-			System.err.println("All values:" + Arrays.toString(values));
 
 			return constructor.newInstance(values);
 
@@ -376,7 +401,23 @@ public class SSJSJS {
 		final Type intendedType,
 		final Object value
 	) throws JSONDeserializeException {
-		if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
+		if (Optional.class.isAssignableFrom(intendedClass)) {
+			System.err.println("deserialize optional value: " + value);
+			if (value == null || value == JSONObject.NULL) return Optional.empty();
+			else {
+				final Type[] typeArgs = ((ParameterizedType) intendedType).getActualTypeArguments();
+				if (typeArgs.length != 1) throw new JSONDeserializeException(
+					"Expected exactly 1 type argument for '" + fieldName + "' field");
+				final Type innerType = typeArgs[0];
+
+				return Optional.of(deserializeField(
+					fieldName + "___OptionalValue__",
+					(Class<?>) innerType,
+					innerType,
+					value));
+			}
+			
+		} else if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
 			if (!(
 				JSONable.class.isAssignableFrom(intendedClass) ||
 				String.class.isAssignableFrom(intendedClass) ||
