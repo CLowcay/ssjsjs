@@ -242,7 +242,8 @@ public class SSJSJS {
 					fieldName,
 					(Class<?>) p.getType(),
 					p.getParameterizedType(),
-					json.opt(fieldName));
+					json.opt(fieldName),
+					environment);
 			}
 
 			return constructor.newInstance(values);
@@ -399,7 +400,8 @@ public class SSJSJS {
 		final String fieldName,
 		final Class<?> intendedClass,
 		final Type intendedType,
-		final Object value
+		final Object value,
+		final Map<String, Object> environment
 	) throws JSONDeserializeException {
 		if (Optional.class.isAssignableFrom(intendedClass)) {
 			System.err.println("deserialize optional value: " + value);
@@ -414,7 +416,7 @@ public class SSJSJS {
 					fieldName + "___OptionalValue__",
 					(Class<?>) innerType,
 					innerType,
-					value));
+					value, environment));
 			}
 			
 		} else if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
@@ -483,7 +485,7 @@ public class SSJSJS {
 		) {
 			@SuppressWarnings("unchecked") final Class<JSONable> deserializeAs =
 				(Class<JSONable>) intendedClass;
-			return (Object) deserialize((JSONObject) value, deserializeAs);
+			return (Object) deserialize((JSONObject) value, deserializeAs, environment);
 
 		} else if (value instanceof JSONArray
 			&& (intendedClass.isAssignableFrom(Collection.class) || intendedClass.isArray())
@@ -501,7 +503,7 @@ public class SSJSJS {
 						fieldName + "[]",
 						(Class<?>) innerType,
 						innerType,
-						innerValue));
+						innerValue, environment));
 				}
 
 				return array;
@@ -515,7 +517,7 @@ public class SSJSJS {
 						fieldName + "[]",
 						elementClass,
 						elementClass,
-						innerValue));
+						innerValue, environment));
 				}
 
 				if (elementClass.isAssignableFrom(byte.class)) {
@@ -590,7 +592,8 @@ public class SSJSJS {
 						fieldName + "{}",
 						(Class<?>) innerType,
 						innerType,
-						object.get(key)));
+						object.get(key),
+						environment));
 				}
 
 				return map;

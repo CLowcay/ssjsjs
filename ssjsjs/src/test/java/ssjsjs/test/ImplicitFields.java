@@ -1,5 +1,6 @@
 package ssjsjs.test;
 
+import java.util.Optional;
 import ssjsjs.annotations.Field;
 import ssjsjs.annotations.Implicit;
 import ssjsjs.annotations.JSONConstructor;
@@ -8,21 +9,25 @@ import ssjsjs.JSONable;
 public class ImplicitFields implements JSONable {
 	public final String something;
 	public final WierdType implicit;
+	public final Optional<ImplicitFields> secondLayer;
 
 	@JSONConstructor
 	public ImplicitFields(
 		@Field("something") final String something,
-		@Implicit("fromEnv") final WierdType implicit
+		@Implicit("fromEnv") final WierdType implicit,
+		@Field("secondLayer") final Optional<ImplicitFields> secondLayer
 	) {
 		this.something = something;
 		this.implicit = implicit;
+		this.secondLayer = secondLayer;
 	}
 
 	@Override
 	public int hashCode() {
 		return
 			(implicit == null? 0 : implicit.hashCode()) +
-			(something == null? 0 : something.hashCode());
+			(something == null? 0 : something.hashCode()) +
+			(secondLayer == null? 0 : secondLayer.hashCode());
 	}
 
 	@Override
@@ -34,7 +39,8 @@ public class ImplicitFields implements JSONable {
 			return
 				((this.something == null && o.something == null)
 					|| (this.something != null && this.something.equals(o.something)))
-				&& this.implicit == o.implicit;
+				&& this.implicit == o.implicit
+				&& this.secondLayer.equals(o.secondLayer);
 		}
 	}
 }

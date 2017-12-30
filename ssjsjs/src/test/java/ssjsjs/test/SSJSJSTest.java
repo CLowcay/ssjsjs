@@ -2,6 +2,7 @@ package ssjsjs.test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -215,8 +216,10 @@ public class SSJSJSTest {
 	@Test
 	public void implicitRoundtrip() throws Exception {
 		final Map<String, Object> env = new HashMap<>();
-		env.put("fromEnv", new WierdType("example"));
-		final ImplicitFields obj = new ImplicitFields("whatever", (WierdType) env.get("fromEnv"));
+		final WierdType wt = new WierdType("example");
+		env.put("fromEnv", wt);
+		final ImplicitFields obj = new ImplicitFields("whatever", wt,
+			Optional.of(new ImplicitFields("whatever 2", wt, Optional.empty())));
 		final ImplicitFields obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj), ImplicitFields.class, env);
 		assertEquals(obj, obj2);
 	}
