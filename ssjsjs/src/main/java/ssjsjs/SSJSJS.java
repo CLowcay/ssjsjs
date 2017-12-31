@@ -416,7 +416,6 @@ public class SSJSJS {
 		final Map<String, Object> environment
 	) throws JSONDeserializeException {
 		if (Optional.class.isAssignableFrom(intendedClass)) {
-			System.err.println("deserialize optional value: " + value);
 			if (value == null || value == JSONObject.NULL) return Optional.empty();
 			else {
 				final Type[] typeArgs = ((ParameterizedType) intendedType).getActualTypeArguments();
