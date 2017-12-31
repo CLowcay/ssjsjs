@@ -217,7 +217,7 @@ public class SSJSJS {
 						if (values[i] == null) {
 							throw new JSONDeserializeException(
 								"Missing value for implicit field '" + envVariable.value() + "'");
-						} else if (!p.getType().isInstance(values[i])) {
+						} else if (!autoUnboxTypeMatch(p.getType(), values[i].getClass())) {
 							throw new JSONDeserializeException(
 								"Wrong type for implicit field '" + envVariable.value() +
 								"', expected a " + p.getType().getTypeName() +
@@ -258,6 +258,18 @@ public class SSJSJS {
 		}
 	}
 
+	private static boolean autoUnboxTypeMatch(final Class<?> intended, final Class<?> actual) {
+		return 
+			intended.isAssignableFrom(actual) ||
+			(intended == boolean.class && Boolean.class.isAssignableFrom(actual)) ||
+			(intended == char.class && Character.class.isAssignableFrom(actual)) ||
+			(intended == byte.class && Byte.class.isAssignableFrom(actual)) ||
+			(intended == short.class && Short.class.isAssignableFrom(actual)) ||
+			(intended == int.class && Integer.class.isAssignableFrom(actual)) ||
+			(intended == long.class && Long.class.isAssignableFrom(actual)) ||
+			(intended == float.class && Float.class.isAssignableFrom(actual)) ||
+			(intended == double.class && Double.class.isAssignableFrom(actual));
+	}
 
 	private static boolean isFinal(final Field f) {
 		return Modifier.isFinal(f.getModifiers());

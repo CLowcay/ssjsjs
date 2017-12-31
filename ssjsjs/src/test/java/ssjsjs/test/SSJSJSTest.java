@@ -224,6 +224,14 @@ public class SSJSJSTest {
 		assertEquals(obj, obj2);
 	}
 
+	@Test
+	public void implicitPrimitives() throws Exception {
+		final ImplicitPrimitives obj = new ImplicitPrimitives();
+		final ImplicitPrimitives obj2 = SSJSJS.deserialize(
+			SSJSJS.serialize(obj), ImplicitPrimitives.class, obj.getEnvironment());
+		assertEquals(obj, obj2);
+	}
+
 	@Test(expected = JSONDeserializeException.class)
 	public void missingImplicit() throws Exception {
 		final JSONObject json = new JSONObject();
