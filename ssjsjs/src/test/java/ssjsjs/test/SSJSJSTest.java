@@ -266,6 +266,17 @@ public class SSJSJSTest {
 		assertEquals(obj, obj2);
 	}
 
+	@Test
+	public void overridenFieldsCanBeSerialized() throws Exception {
+		final Override1 obj1 = new Override1((byte) 0);
+		final Override1 obj2 = SSJSJS.deserialize(SSJSJS.serialize(obj1), Override1.class);
+		assertEquals(obj1, obj2);
+
+		final Override2 obj3 = new Override2((byte) 0);
+		final Override2 obj4 = SSJSJS.deserialize(SSJSJS.serialize(obj3), Override2.class);
+		assertEquals(obj3, obj4);
+	}
+
 	@Test(expected = JSONSerializeException.class)
 	public void requireConstructorAnnotation() throws Exception {
 		SSJSJS.serialize(new NoConstructorAnnotation());

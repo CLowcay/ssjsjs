@@ -61,7 +61,7 @@ public class SSJSJS {
 				if (out.has(outputFieldName)) throw new JSONSerializeException(
 					"Duplicate field name: " + outputFieldName);
 
-				final Field f = clazz.getDeclaredField(fieldName);
+				final Field f = getAnyField(clazz, fieldName);
 				f.setAccessible(true);
 
 				final Object value = f.get(obj);
@@ -133,12 +133,23 @@ public class SSJSJS {
 			return out;
 		} catch (final IllegalAccessException
 			| IllegalArgumentException
-			| NoSuchFieldException
 			| SecurityException
+			| NoSuchFieldException
 			| NullPointerException
 			| ClassCastException
 			| ExceptionInInitializerError e) {
 			throw new JSONSerializeException(e);
+		}
+	}
+
+	private static Field getAnyField(final Class<?> clazz, final String name)
+		throws SecurityException, NoSuchFieldException, NullPointerException
+	{
+		try {
+			return clazz.getDeclaredField(name);
+		} catch (final NoSuchFieldException e) {
+			final Class<?> spr = clazz.getSuperclass();
+			if (spr == null) throw e; else return getAnyField(spr, name);
 		}
 	}
 
