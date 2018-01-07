@@ -277,6 +277,22 @@ public class SSJSJSTest {
 		assertEquals(obj3, obj4);
 	}
 
+	@Test
+	public void otherCollectionTypesRoundtrip() throws Exception {
+		final WithCollectionTypes obj1 = new WithCollectionTypes();
+		final WithCollectionTypes obj2 = SSJSJS.deserialize(
+			SSJSJS.serialize(obj1), WithCollectionTypes.class);
+		assertEquals(obj1, obj2);
+	}
+
+	@Test
+	public void otherCollectionTypesLongRoundtrip() throws Exception {
+		final WithCollectionTypes obj1 = new WithCollectionTypes();
+		final WithCollectionTypes obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj1).toString()), WithCollectionTypes.class);
+		assertEquals(obj1, obj2);
+	}
+
 	@Test(expected = JSONSerializeException.class)
 	public void requireConstructorAnnotation() throws Exception {
 		SSJSJS.serialize(new NoConstructorAnnotation());

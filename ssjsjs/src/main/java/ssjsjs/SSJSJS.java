@@ -66,15 +66,12 @@ public class SSJSJS {
 
 				final Object value = f.get(obj);
 
-				if (value instanceof Collection) {
-					if (!p.getType().isAssignableFrom(Collection.class))
-						throw new JSONSerializeException("Collection parameters must be declared Collection<T>");
-
+				if (isCollection(value)) {
 					if (!(type instanceof ParameterizedType))
 						throw new JSONSerializeException("Cannot serialize non-generic collections");
 
 					out.put(outputFieldName,
-						serializeCollection((ParameterizedType) type, (Collection) value));
+						serializeCollection((ParameterizedType) type, (Collection<?>) value));
 
 				} else if (value instanceof Map) {
 					if (!p.getType().isAssignableFrom(Map.class))
@@ -151,6 +148,13 @@ public class SSJSJS {
 			final Class<?> spr = clazz.getSuperclass();
 			if (spr == null) throw e; else return getAnyField(spr, name);
 		}
+	}
+
+	private static boolean isCollection(final Object value) {
+		return
+			value instanceof Collection ||
+			value instanceof List ||
+			value instanceof Set;
 	}
 
 	private static boolean isJSONPrimitive(final Class<?> clazz) {
@@ -509,8 +513,10 @@ public class SSJSJS {
 				(Class<JSONable>) intendedClass;
 			return (Object) deserialize((JSONObject) value, deserializeAs, environment);
 
-		} else if (value instanceof JSONArray
-			&& (intendedClass.isAssignableFrom(Collection.class) || intendedClass.isArray())
+		} else if (value instanceof JSONArray &&
+			(intendedClass.isAssignableFrom(List.class) ||
+			 intendedClass.isAssignableFrom(Set.class) ||
+			intendedClass.isArray())
 		) {
 			if (intendedType instanceof ParameterizedType) {
 				final Type[] typeArgs = ((ParameterizedType) intendedType).getActualTypeArguments();
@@ -519,7 +525,7 @@ public class SSJSJS {
 
 				final Type innerType = typeArgs[0];
 
-				final Collection<Object> array = new ArrayList<>();
+				final List<Object> array = new ArrayList<>();
 				for (final Object innerValue : (JSONArray) value) {
 					array.add(deserializeField(
 						fieldName + "[]",
@@ -528,7 +534,11 @@ public class SSJSJS {
 						innerValue, environment));
 				}
 
-				return array;
+				if (intendedClass.isAssignableFrom(Set.class)) {
+					return new HashSet<>(array);
+				} else {
+					return array;
+				}
 
 			} else if (((Class<?>) intendedType).isArray()) {
 				final List<Object> array = new ArrayList<>();
