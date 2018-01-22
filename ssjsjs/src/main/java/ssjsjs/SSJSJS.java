@@ -64,64 +64,10 @@ public class SSJSJS {
 				final Field f = getAnyField(clazz, fieldName);
 				f.setAccessible(true);
 
-				final Object value = f.get(obj);
-
-				if (isCollection(value)) {
-					if (!(type instanceof ParameterizedType))
-						throw new JSONSerializeException("Cannot serialize non-generic collections");
-
-					out.put(outputFieldName,
-						serializeCollection((ParameterizedType) type, (Collection<?>) value));
-
-				} else if (value instanceof Map) {
-					if (!p.getType().isAssignableFrom(Map.class))
-						throw new JSONSerializeException("Map parameters must be declared Map<T>");
-
-					if (!(type instanceof ParameterizedType))
-						throw new JSONSerializeException("Cannot serialize non-generic maps");
-
-					out.put(outputFieldName, serializeMap((ParameterizedType) type, (Map) value));
-
-				} else if (value instanceof Optional) {
-					if (!(type instanceof ParameterizedType))
-						throw new JSONSerializeException("Cannot serialize non-generic optionals");
-
-						final Type[] args = ((ParameterizedType) type).getActualTypeArguments();
-						if (args.length != 1) throw
-							new JSONSerializeException("Expect one type argument for optional types");
-
-						@SuppressWarnings("unchecked")
-						final Object innerValue = ((Optional<Object>) value).orElse(null);
-						final Class<?> elementClass = (Class<?>) args[0];
-
-						// swap the null types
-						if (innerValue == null) {
-							/* do nothing */
-						} else if (isJSONPrimitive(elementClass)) {
-							out.put(outputFieldName, innerValue);
-						} else if (elementClass.isEnum()) {
-							out.put(outputFieldName, innerValue.toString());
-						} else if (JSONable.class.isAssignableFrom(elementClass)) {
-							out.put(outputFieldName, serialize((JSONable) innerValue));
-						} else {
-							throw new JSONSerializeException(
-								"Cannot serialize collection element type: " + elementClass);
-						}
-
-				} else if (value instanceof JSONable) {
-					out.put(outputFieldName, serialize((JSONable) value));
-
-				} else if (value == null || isJSONPrimitive(f.getType())) {
-					out.put(outputFieldName, makeJSONPrimitive(value));
-
-				} else if (value.getClass().isEnum()) {
-					out.put(outputFieldName, value.toString());
-
-				} else if (value.getClass().isArray()) {
-					final Class<?> elementType = value.getClass().getComponentType();
-					out.put(outputFieldName, serializeArray(value, elementType));
-
-				} else {
+				try {
+					final Object sval = serializeField(f.get(obj), type);
+					if (sval != null) out.put(outputFieldName, sval);
+				} catch (final JSONSerializeException e) {
 					throw new JSONSerializeException(
 						"Cannot serialize field '" + fieldName + "' of type " + f.getGenericType().getTypeName());
 				}
@@ -184,6 +130,52 @@ public class SSJSJS {
 		else if (obj instanceof Boolean) return obj;
 		else if (obj instanceof String) return obj;
 		else return null;
+	}
+
+	private static Object serializeField(final Object value, final Type type)
+		throws JSONSerializeException
+	{
+		if (isCollection(value)) {
+			if (!(type instanceof ParameterizedType))
+				throw new JSONSerializeException("Cannot serialize non-generic collections");
+			return serializeCollection((ParameterizedType) type, (Collection<?>) value);
+
+		} else if (value instanceof Map) {
+			if (!(type instanceof ParameterizedType))
+				throw new JSONSerializeException("Cannot serialize non-generic maps");
+
+			return serializeMap((ParameterizedType) type, (Map) value);
+
+		} else if (value instanceof Optional) {
+			if (!(type instanceof ParameterizedType))
+				throw new JSONSerializeException("Cannot serialize non-generic optionals");
+
+				final Type[] args = ((ParameterizedType) type).getActualTypeArguments();
+				if (args.length != 1) throw
+					new JSONSerializeException("Expect one type argument for optional types");
+
+				@SuppressWarnings("unchecked")
+				final Object innerValue = ((Optional<Object>) value).orElse(null);
+				final Type elementType = args[0];
+
+				return serializeField(innerValue, elementType);
+
+		} else if (value instanceof JSONable) {
+			return serialize((JSONable) value);
+
+		} else if (value == null || isJSONPrimitive(value.getClass())) {
+			return makeJSONPrimitive(value);
+
+		} else if (value.getClass().isEnum()) {
+			return value.toString();
+
+		} else if (value.getClass().isArray()) {
+			final Class<?> elementType = value.getClass().getComponentType();
+			return serializeArray(value, elementType);
+
+		} else {
+			throw new JSONSerializeException();
+		}
 	}
 
 	/**
@@ -373,17 +365,14 @@ public class SSJSJS {
 		if (args.length != 1) throw
 			new JSONSerializeException("Expect one type argument for collection types");
 
-		final Class<?> elementClass = (Class<?>) args[0];
+		final Type elementType = args[0];
 
-		if (isJSONPrimitive(elementClass)) {
-			for (final Object element : collection) out2.put(element);
-		} else if (elementClass.isEnum()) {
-			for (final Object element : collection) out2.put(element.toString());
-		} else if (JSONable.class.isAssignableFrom(elementClass)) {
-			for (final Object element : collection) out2.put(serialize((JSONable) element));
-		} else {
+		try {
+			for (final Object element : collection)
+				out2.put(serializeField(element, elementType));
+		} catch (final JSONSerializeException e) {
 			throw new JSONSerializeException(
-				"Cannot serialize collection element type: " + elementClass);
+				"Cannot serialize collection element type: " + elementType);
 		}
 
 		return out2;
@@ -399,28 +388,35 @@ public class SSJSJS {
 		if (args.length != 2) throw
 			new JSONSerializeException("Expect two type arguments for map types");
 
-		final Class<?> keyClass = (Class<?>) args[0];
-		final Class<?> elementClass = (Class<?>) args[1];
+		final Type keyType = args[0];
+		final Type elementType = args[1];
 
-		if (!String.class.isAssignableFrom(keyClass))
+		try {
+			if (!String.class.isAssignableFrom((Class<?>) keyType))
+				throw new JSONSerializeException("Map keys must be Strings");
+		} catch (final ClassCastException e) {
 			throw new JSONSerializeException("Map keys must be Strings");
+		}
 
 		@SuppressWarnings("unchecked") final Map<String, ?> map = (Map<String, ?>) map0;
 
-		final boolean isRecursive = JSONable.class.isAssignableFrom(elementClass);
-
-		if (isJSONPrimitive(elementClass)) {
-			for (final String key : map.keySet()) out2.put(key, map.get(key));
-		} else if (elementClass.isEnum()) {
-			for (final String key : map.keySet()) out2.put(key, map.get(key).toString());
-		} else if (JSONable.class.isAssignableFrom(elementClass)) {
-			for (final String key : map.keySet()) out2.put(key, serialize((JSONable) map.get(key)));
-		} else {
+		try {
+			for (final String key : map.keySet())
+				out2.put(key, serializeField(map.get(key), elementType));
+		} catch (final JSONSerializeException e) {
 			throw new JSONSerializeException(
-				"Cannot serialize map element type: " + elementClass);
+				"Cannot serialize map element type: " + elementType);
 		}
 
 		return out2;
+	}
+
+	private static Class<?> typeToClass(final Type type) throws ClassCastException {
+		if (type instanceof ParameterizedType) {
+			return (Class<?>) ((ParameterizedType) type).getRawType();
+		} else {
+			return (Class<?>) type;
+		}
 	}
 
 	private static Object deserializeField(
@@ -438,11 +434,15 @@ public class SSJSJS {
 					"Expected exactly 1 type argument for '" + fieldName + "' field");
 				final Type innerType = typeArgs[0];
 
+				try {
 				return Optional.of(deserializeField(
 					fieldName + "___OptionalValue__",
-					(Class<?>) innerType,
+					typeToClass(innerType),
 					innerType,
 					value, environment));
+				} catch (final ClassCastException e) {
+					throw new JSONDeserializeException("Java reflection error", e);
+				}
 			}
 			
 		} else if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
@@ -527,11 +527,15 @@ public class SSJSJS {
 
 				final List<Object> array = new ArrayList<>();
 				for (final Object innerValue : (JSONArray) value) {
-					array.add(deserializeField(
-						fieldName + "[]",
-						(Class<?>) innerType,
-						innerType,
-						innerValue, environment));
+					try {
+						array.add(deserializeField(
+							fieldName + "[]",
+							typeToClass(innerType),
+							innerType,
+							innerValue, environment));
+					} catch (final ClassCastException e) {
+						throw new JSONDeserializeException("Java reflection error", e);
+					}
 				}
 
 				if (intendedClass.isAssignableFrom(Set.class)) {
@@ -620,12 +624,16 @@ public class SSJSJS {
 				final JSONObject object = (JSONObject) value;
 				final Map<String, Object> map = new HashMap<>();
 				for (final String key : object.keySet()) {
-					map.put(key, deserializeField(
-						fieldName + "{}",
-						(Class<?>) innerType,
-						innerType,
-						object.get(key),
-						environment));
+					try {
+						map.put(key, deserializeField(
+							fieldName + "{}",
+							typeToClass(innerType),
+							innerType,
+							object.get(key),
+							environment));
+					} catch (final ClassCastException e) {
+						throw new JSONDeserializeException("Java reflection error", e);
+					}
 				}
 
 				return map;

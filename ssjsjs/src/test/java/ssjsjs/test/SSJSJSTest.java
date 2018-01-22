@@ -293,6 +293,22 @@ public class SSJSJSTest {
 		assertEquals(obj1, obj2);
 	}
 
+	@Test
+	public void nestedCollectionsRoundtrip() throws Exception {
+		final NestedCollections obj1 = new NestedCollections();
+		final NestedCollections obj2 = SSJSJS.deserialize(
+			SSJSJS.serialize(obj1), NestedCollections.class);
+		assertEquals(obj1, obj2);
+	}
+
+	@Test
+	public void nestedCollectionsLongRoundtrip() throws Exception {
+		final NestedCollections obj1 = new NestedCollections();
+		final NestedCollections obj2 = SSJSJS.deserialize(
+			new JSONObject(SSJSJS.serialize(obj1).toString()), NestedCollections.class);
+		assertEquals(obj1, obj2);
+	}
+
 	@Test(expected = JSONSerializeException.class)
 	public void requireConstructorAnnotation() throws Exception {
 		SSJSJS.serialize(new NoConstructorAnnotation());
