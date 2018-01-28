@@ -1,7 +1,7 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class Override1 extends Primitives {
@@ -9,7 +9,7 @@ public class Override1 extends Primitives {
 		super(x);
 	}
 
-	@JSONConstructor
+	@JSON
 	public Override1(
 		@Field("byteVal") final byte byteVal,
 		@Field("charVal") final char charVal,

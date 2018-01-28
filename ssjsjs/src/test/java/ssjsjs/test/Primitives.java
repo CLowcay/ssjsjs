@@ -1,7 +1,7 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class Primitives implements JSONable {
@@ -45,7 +45,7 @@ public class Primitives implements JSONable {
 		this.bbooleanVal = !booleanVal;
 	}
 
-	@JSONConstructor
+	@JSON
 	public Primitives(
 		@Field("byteVal") final byte byteVal,
 		@Field("charVal") final char charVal,

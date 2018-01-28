@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import ssjsjs.JSONable;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 
 public class WithMaps implements JSONable {
 	public final Map<String, Integer> emptyMap;
@@ -33,7 +33,7 @@ public class WithMaps implements JSONable {
 		primitives.put("", new Primitives((byte) (4 + (byte) x)));
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithMaps(
 		@Field("emptyMap") final Map<String, Integer> emptyMap,
 		@Field("numbers") final Map<String, Integer> numbers,

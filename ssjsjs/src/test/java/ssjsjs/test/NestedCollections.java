@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class NestedCollections implements JSONable {
@@ -68,7 +68,7 @@ public class NestedCollections implements JSONable {
 		this.mol.put("three", Optional.of(mkList(3)));
 	}
 
-	@JSONConstructor
+	@JSON
 	public NestedCollections(
 		@Field("ll") final List<List<Integer>> ll,
 		@Field("ls") final List<Set<Integer>> ls,

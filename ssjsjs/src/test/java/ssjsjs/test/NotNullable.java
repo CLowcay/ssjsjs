@@ -1,7 +1,7 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class NotNullable implements JSONable {
@@ -11,7 +11,7 @@ public class NotNullable implements JSONable {
 		this.notNullable = null;
 	}
 
-	@JSONConstructor
+	@JSON
 	public NotNullable(
 		@Field("notNullable") final String val
 	) {

@@ -1,13 +1,13 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithPrivateFields implements JSONable {
 	private final String example;
 
-	@JSONConstructor
+	@JSON
 	public WithPrivateFields(
 		@Field("example") final String example
 	) {

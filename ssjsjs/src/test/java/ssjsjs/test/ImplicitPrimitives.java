@@ -3,7 +3,7 @@ package ssjsjs.test;
 import java.util.HashMap;
 import java.util.Map;
 import ssjsjs.annotations.Implicit;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class ImplicitPrimitives implements JSONable {
@@ -27,7 +27,7 @@ public class ImplicitPrimitives implements JSONable {
 		booleanVal = true;
 	}
 
-	@JSONConstructor
+	@JSON
 	public ImplicitPrimitives(
 		@Implicit("byteVal") final byte byteVal,
 		@Implicit("charVal") final char charVal,

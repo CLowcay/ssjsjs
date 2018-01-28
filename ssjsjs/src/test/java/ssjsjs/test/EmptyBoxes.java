@@ -1,7 +1,7 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.annotations.Nullable;
 import ssjsjs.JSONable;
 
@@ -26,7 +26,7 @@ public class EmptyBoxes implements JSONable {
 		booleanVal = null;
 	}
 
-	@JSONConstructor
+	@JSON
 	public EmptyBoxes(
 		@Nullable@Field("byteVal") final Byte byteVal,
 		@Nullable@Field("charVal") final Character charVal,

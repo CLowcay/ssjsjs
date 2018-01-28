@@ -1,7 +1,7 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class Override2 extends Override1 {
@@ -9,7 +9,7 @@ public class Override2 extends Override1 {
 		super(x);
 	}
 
-	@JSONConstructor
+	@JSON
 	public Override2(
 		@Field("byteVal") final byte byteVal,
 		@Field("charVal") final char charVal,

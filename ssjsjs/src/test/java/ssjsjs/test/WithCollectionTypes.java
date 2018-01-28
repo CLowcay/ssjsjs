@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithCollectionTypes implements JSONable {
@@ -29,7 +29,7 @@ public class WithCollectionTypes implements JSONable {
 		this.set.add(4);
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithCollectionTypes(
 		@Field("list") final List<Integer> list,
 		@Field("set") final Set<Integer> set

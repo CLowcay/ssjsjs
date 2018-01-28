@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithEnums implements JSONable {
@@ -28,7 +28,7 @@ public class WithEnums implements JSONable {
 		arrayEnums = new SomeEnum[] {enumField};
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithEnums(
 		@Field("enumField") final SomeEnum enumField,
 		@Field("enums") final Collection<SomeEnum> enums,

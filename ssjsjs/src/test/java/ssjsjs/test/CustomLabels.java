@@ -2,7 +2,7 @@ package ssjsjs.test;
 
 import ssjsjs.annotations.As;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class CustomLabels implements JSONable {
@@ -14,7 +14,7 @@ public class CustomLabels implements JSONable {
 		this.b = "It's another string";
 	}
 
-	@JSONConstructor
+	@JSON
 	public CustomLabels(
 		@Field("a") final String a,
 		@Field("b")@As("custom") final String b

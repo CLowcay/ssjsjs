@@ -3,7 +3,7 @@ package ssjsjs.test;
 import java.util.Optional;
 import ssjsjs.annotations.Field;
 import ssjsjs.annotations.Implicit;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class ImplicitFields implements JSONable {
@@ -11,7 +11,7 @@ public class ImplicitFields implements JSONable {
 	public final WierdType implicit;
 	public final Optional<ImplicitFields> secondLayer;
 
-	@JSONConstructor
+	@JSON
 	public ImplicitFields(
 		@Field("something") final String something,
 		@Implicit("fromEnv") final WierdType implicit,

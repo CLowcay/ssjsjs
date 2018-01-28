@@ -1,10 +1,10 @@
 package ssjsjs.test;
 
 import ssjsjs.JSONable;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 
 class Empty implements JSONable {
-	@JSONConstructor
+	@JSON
 	public Empty() {
 	}
 }

@@ -3,7 +3,7 @@ package ssjsjs.test;
 import java.util.Collection;
 import java.util.Optional;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithOptionals implements JSONable {
@@ -23,7 +23,7 @@ public class WithOptionals implements JSONable {
 		}
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithOptionals(
 		@Field("integer") final Optional<Integer> integer,
 		@Field("string") final Optional<String> string,

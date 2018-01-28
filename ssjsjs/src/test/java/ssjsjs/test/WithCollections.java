@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithCollections implements JSONable {
@@ -44,7 +44,7 @@ public class WithCollections implements JSONable {
 		primitives2.add(new Primitives((byte) (9 + (byte) x)));
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithCollections(
 		@Field("emptyList") final Collection<Integer> emptyList,
 		@Field("numbers") final Collection<Integer> numbers,

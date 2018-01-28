@@ -2,7 +2,7 @@ package ssjsjs.test;
 
 import java.util.Arrays;
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class WithArrays implements JSONable {
@@ -47,7 +47,7 @@ public class WithArrays implements JSONable {
 		this.bbooleanArray = new Boolean[]   {true, false, null};
 	}
 
-	@JSONConstructor
+	@JSON
 	public WithArrays(
 		@Field("byteArray") final byte[] byteArray ,
 		@Field("charArray") final char[] charArray,

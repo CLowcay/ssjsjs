@@ -1,13 +1,13 @@
 package ssjsjs.test;
 
 import ssjsjs.annotations.Field;
-import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.JSON;
 import ssjsjs.JSONable;
 
 public class UnserializableField implements JSONable {
 	final StringBuilder a;
 
-	@JSONConstructor
+	@JSON
 	public UnserializableField(
 		@Field("a") final StringBuilder a
 	) {
