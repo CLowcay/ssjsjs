@@ -1,8 +1,9 @@
 package ssjsjs.test;
 
-import ssjsjs.JSONable;
 import ssjsjs.annotations.Field;
 import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.Nullable;
+import ssjsjs.JSONable;
 
 public class EmptyBoxes implements JSONable {
 	public final Byte byteVal;
@@ -27,14 +28,14 @@ public class EmptyBoxes implements JSONable {
 
 	@JSONConstructor
 	public EmptyBoxes(
-		@Field("byteVal") final Byte byteVal,
-		@Field("charVal") final Character charVal,
-		@Field("shortVal") final Short shortVal,
-		@Field("intVal") final Integer intVal,
-		@Field("longVal") final Long longVal,
-		@Field("floatVal") final Float floatVal,
-		@Field("doubleVal") final Double doubleVal,
-		@Field("booleanVal") final Boolean booleanVal
+		@Nullable@Field("byteVal") final Byte byteVal,
+		@Nullable@Field("charVal") final Character charVal,
+		@Nullable@Field("shortVal") final Short shortVal,
+		@Nullable@Field("intVal") final Integer intVal,
+		@Nullable@Field("longVal") final Long longVal,
+		@Nullable@Field("floatVal") final Float floatVal,
+		@Nullable@Field("doubleVal") final Double doubleVal,
+		@Nullable@Field("booleanVal") final Boolean booleanVal
 	) {
 		this.byteVal = byteVal;
 		this.charVal = charVal;

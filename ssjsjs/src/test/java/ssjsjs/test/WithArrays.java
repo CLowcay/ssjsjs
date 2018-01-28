@@ -7,7 +7,6 @@ import ssjsjs.JSONable;
 
 public class WithArrays implements JSONable {
 	public final byte[] byteArray;
-	public final byte[] byteArray2;
 	public final char[] charArray;
 	public final short[] shortArray;
 	public final int[] intArray;
@@ -17,7 +16,6 @@ public class WithArrays implements JSONable {
 	public final boolean[] booleanArray;
 	public final String[] StringArray1;
 	public final String[] StringArray2;
-	public final String[] StringArray3;
 
 	public final Byte[] bbyteArray;
 	public final Character[] bcharArray;
@@ -30,7 +28,6 @@ public class WithArrays implements JSONable {
 
 	public WithArrays() {
 		this.byteArray     = new byte[]      {1,2,3};
-		this.byteArray2    = null;
 		this.charArray     = new char[]      {'a'};
 		this.shortArray    = new short[]     {4,5};
 		this.intArray      = new int[]       {5};
@@ -40,7 +37,6 @@ public class WithArrays implements JSONable {
 		this.booleanArray  = new boolean[]   {true, false};
 		this.StringArray1  = new String[]    {"Something", "", null};
 		this.StringArray2  = new String[]    {};
-		this.StringArray3  = null;
 		this.bbyteArray    = new Byte[]      {2, null};
 		this.bcharArray    = new Character[] {null, 'a', '☆'};
 		this.bshortArray   = new Short[]     {10, null};
@@ -54,7 +50,6 @@ public class WithArrays implements JSONable {
 	@JSONConstructor
 	public WithArrays(
 		@Field("byteArray") final byte[] byteArray ,
-		@Field("byteArray2") final byte[] byteArray2,
 		@Field("charArray") final char[] charArray,
 		@Field("shortArray") final short[] shortArray,
 		@Field("intArray") final int[] intArray,
@@ -64,7 +59,6 @@ public class WithArrays implements JSONable {
 		@Field("booleanArray") final boolean[] booleanArray,
 		@Field("StringArray1") final String[] StringArray1,
 		@Field("StringArray2") final String[] StringArray2,
-		@Field("StringArray3") final String[] StringArray3,
 		@Field("bbyteArray") final Byte[] bbyteArray,
 		@Field("bcharArray") final Character[] bcharArray,
 		@Field("bshortArray") final Short[] bshortArray,
@@ -75,7 +69,6 @@ public class WithArrays implements JSONable {
 		@Field("bbooleanArray") final Boolean[] bbooleanArray
 	) {
 		this.byteArray = byteArray;
-		this.byteArray2 = byteArray2;
 		this.charArray = charArray;
 		this.shortArray = shortArray;
 		this.intArray = intArray;
@@ -85,7 +78,6 @@ public class WithArrays implements JSONable {
 		this.booleanArray = booleanArray;
 		this.StringArray1 = StringArray1;
 		this.StringArray2 = StringArray2;
-		this.StringArray3 = StringArray3;
 		this.bbyteArray = bbyteArray;
 		this.bcharArray = bcharArray;
 		this.bshortArray = bshortArray;
@@ -99,7 +91,6 @@ public class WithArrays implements JSONable {
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(byteArray) +
-			Arrays.hashCode(byteArray2) +
 			Arrays.hashCode(charArray) +
 			Arrays.hashCode(shortArray) +
 			Arrays.hashCode(intArray) +
@@ -109,7 +100,6 @@ public class WithArrays implements JSONable {
 			Arrays.hashCode(booleanArray) +
 			Arrays.hashCode(StringArray1) +
 			Arrays.hashCode(StringArray2) +
-			Arrays.hashCode(StringArray3) +
 			Arrays.hashCode(bbyteArray) +
 			Arrays.hashCode(bcharArray) +
 			Arrays.hashCode(bshortArray) +
@@ -125,7 +115,6 @@ public class WithArrays implements JSONable {
 		if (other instanceof WithArrays) {
 			final WithArrays o = (WithArrays) other;
 			return Arrays.equals(this.byteArray, o.byteArray) &&
-				Arrays.equals(this.byteArray2, o.byteArray2) &&
 				Arrays.equals(this.charArray, o.charArray) &&
 				Arrays.equals(this.shortArray, o.shortArray) &&
 				Arrays.equals(this.intArray, o.intArray) &&
@@ -135,7 +124,6 @@ public class WithArrays implements JSONable {
 				Arrays.equals(this.booleanArray, o.booleanArray) &&
 				Arrays.equals(this.StringArray1, o.StringArray1) &&
 				Arrays.equals(this.StringArray2, o.StringArray2) &&
-				Arrays.equals(this.StringArray3, o.StringArray3) &&
 				Arrays.equals(this.bbyteArray, o.bbyteArray) &&
 				Arrays.equals(this.bcharArray, o.bcharArray) &&
 				Arrays.equals(this.bshortArray, o.bshortArray) &&

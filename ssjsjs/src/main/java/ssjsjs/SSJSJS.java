@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import ssjsjs.annotations.As;
 import ssjsjs.annotations.Implicit;
 import ssjsjs.annotations.JSONConstructor;
+import ssjsjs.annotations.Nullable;
 
 /**
  * Contains routines for serializing to JSON, and deserializing from JSON.
@@ -61,15 +62,20 @@ public class SSJSJS {
 				if (out.has(outputFieldName)) throw new JSONSerializeException(
 					"Duplicate field name: " + outputFieldName);
 
+				final boolean nullable = p.getAnnotation(Nullable.class) != null;
+
 				final Field f = getAnyField(clazz, fieldName);
 				f.setAccessible(true);
 
 				try {
-					final Object sval = serializeField(f.get(obj), type);
+					final Object sval = serializeField(f.get(obj), type, nullable);
 					if (sval != null) out.put(outputFieldName, sval);
+
 				} catch (final JSONSerializeException e) {
 					throw new JSONSerializeException(
-						"Cannot serialize field '" + fieldName + "' of type " + f.getGenericType().getTypeName());
+						"Cannot serialize field '" + fieldName +
+						"' of type " + f.getGenericType().getTypeName() +
+						" because " + e.getMessage());
 				}
 			}
 
@@ -132,10 +138,15 @@ public class SSJSJS {
 		else return null;
 	}
 
-	private static Object serializeField(final Object value, final Type type)
-		throws JSONSerializeException
+	private static Object serializeField(
+		final Object value, final Type type, final boolean nullable
+	) throws JSONSerializeException
 	{
-		if (isCollection(value)) {
+		if (value == null || value == JSONObject.NULL) {
+			if (!nullable) throw new NullPointerException();
+			return null;
+
+		} else if (isCollection(value)) {
 			if (!(type instanceof ParameterizedType))
 				throw new JSONSerializeException("Cannot serialize non-generic collections");
 			return serializeCollection((ParameterizedType) type, (Collection<?>) value);
@@ -158,12 +169,12 @@ public class SSJSJS {
 				final Object innerValue = ((Optional<Object>) value).orElse(null);
 				final Type elementType = args[0];
 
-				return serializeField(innerValue, elementType);
+				return serializeField(innerValue, elementType, true);
 
 		} else if (value instanceof JSONable) {
 			return serialize((JSONable) value);
 
-		} else if (value == null || isJSONPrimitive(value.getClass())) {
+		} else if (isJSONPrimitive(value.getClass())) {
 			return makeJSONPrimitive(value);
 
 		} else if (value.getClass().isEnum()) {
@@ -174,7 +185,8 @@ public class SSJSJS {
 			return serializeArray(value, elementType);
 
 		} else {
-			throw new JSONSerializeException();
+			throw new JSONSerializeException("Cannot serialize fields of type '" +
+				value.getClass().getTypeName() + "'");
 		}
 	}
 
@@ -241,6 +253,8 @@ public class SSJSJS {
 				final As as = p.getAnnotation(As.class);
 				final String fieldName = as == null? alias.value() : as.value();
 
+				final boolean nullable = p.getAnnotation(Nullable.class) != null;
+
 				if (seen.contains(fieldName)) throw new JSONDeserializeException(
 					"Duplicate field '" + fieldName + "' in class '" + clazz + "'");
 				seen.add(fieldName);
@@ -250,7 +264,8 @@ public class SSJSJS {
 					(Class<?>) p.getType(),
 					p.getParameterizedType(),
 					json.opt(fieldName),
-					environment);
+					environment,
+					nullable);
 			}
 
 			return constructor.newInstance(values);
@@ -369,7 +384,7 @@ public class SSJSJS {
 
 		try {
 			for (final Object element : collection)
-				out2.put(serializeField(element, elementType));
+				out2.put(serializeField(element, elementType, true));
 		} catch (final JSONSerializeException e) {
 			throw new JSONSerializeException(
 				"Cannot serialize collection element type: " + elementType);
@@ -402,7 +417,7 @@ public class SSJSJS {
 
 		try {
 			for (final String key : map.keySet())
-				out2.put(key, serializeField(map.get(key), elementType));
+				out2.put(key, serializeField(map.get(key), elementType, true));
 		} catch (final JSONSerializeException e) {
 			throw new JSONSerializeException(
 				"Cannot serialize map element type: " + elementType);
@@ -424,7 +439,8 @@ public class SSJSJS {
 		final Class<?> intendedClass,
 		final Type intendedType,
 		final Object value,
-		final Map<String, Object> environment
+		final Map<String, Object> environment,
+		final boolean nullable
 	) throws JSONDeserializeException {
 		if (Optional.class.isAssignableFrom(intendedClass)) {
 			if (value == null || value == JSONObject.NULL) return Optional.empty();
@@ -439,13 +455,20 @@ public class SSJSJS {
 					fieldName + "___OptionalValue__",
 					typeToClass(innerType),
 					innerType,
-					value, environment));
+					value, environment, true));
 				} catch (final ClassCastException e) {
 					throw new JSONDeserializeException("Java reflection error", e);
 				}
 			}
 			
-		} else if (value == null || value == JSONObject.NULL || intendedClass.isInstance(value)) {
+		} else if (value == null || value == JSONObject.NULL) {
+			if (!nullable) throw new JSONDeserializeException(
+				"Cannot deserialize non-nullable field '" + fieldName + "' of type '"
+				+ intendedClass + "'. Input JSON has no value for this field.");
+
+			return null;
+
+		} else if (intendedClass.isInstance(value)) {
 			if (!(
 				JSONable.class.isAssignableFrom(intendedClass) ||
 				String.class.isAssignableFrom(intendedClass) ||
@@ -463,7 +486,7 @@ public class SSJSJS {
 			)) throw new JSONDeserializeException(
 				"Cannot deserialize field '" + fieldName + "' of type '" + intendedClass + "'");
 
-			return value == JSONObject.NULL? null : value;
+			return value;
 
 		} else if (value instanceof String) {
 			if (((String) value).length() == 1 &&
@@ -532,7 +555,7 @@ public class SSJSJS {
 							fieldName + "[]",
 							typeToClass(innerType),
 							innerType,
-							innerValue, environment));
+							innerValue, environment, true));
 					} catch (final ClassCastException e) {
 						throw new JSONDeserializeException("Java reflection error", e);
 					}
@@ -553,7 +576,7 @@ public class SSJSJS {
 						fieldName + "[]",
 						elementClass,
 						elementClass,
-						innerValue, environment));
+						innerValue, environment, true));
 				}
 
 				if (elementClass.isAssignableFrom(byte.class)) {
@@ -630,7 +653,7 @@ public class SSJSJS {
 							typeToClass(innerType),
 							innerType,
 							object.get(key),
-							environment));
+							environment, true));
 					} catch (final ClassCastException e) {
 						throw new JSONDeserializeException("Java reflection error", e);
 					}

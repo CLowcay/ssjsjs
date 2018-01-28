@@ -14,7 +14,6 @@ public class Primitives implements JSONable {
 	public final double doubleVal;
 	public final boolean booleanVal;
 	public final String stringVal1;
-	public final String stringVal2;
 
 	public final Byte bbyteVal;
 	public final Character bcharVal;
@@ -35,7 +34,6 @@ public class Primitives implements JSONable {
 		this.doubleVal = 0.123423d * (double) x;
 		this.booleanVal = (x % 2) == 0;
 		this.stringVal1 = "It's a string " + x;
-		this.stringVal2 =  null;
 
 		this.bbyteVal = (byte) (this.byteVal + x);
 		this.bcharVal = (char) (charVal + x);
@@ -58,7 +56,6 @@ public class Primitives implements JSONable {
 		@Field("doubleVal") final double doubleVal,
 		@Field("booleanVal") final boolean booleanVal,
 		@Field("stringVal1") final String stringVal1,
-		@Field("stringVal2") final String stringVal2,
 		@Field("bbyteVal") final Byte bbyteVal,
 		@Field("bcharVal") final Character bcharVal,
 		@Field("bshortVal") final Short bshortVal,
@@ -77,7 +74,6 @@ public class Primitives implements JSONable {
 		this.doubleVal = doubleVal;
 		this.booleanVal = booleanVal;
 		this.stringVal1 = stringVal1;
-		this.stringVal2 = stringVal2;
 
 		this.bbyteVal = bbyteVal;
 		this.bcharVal =  bcharVal;
@@ -101,7 +97,6 @@ public class Primitives implements JSONable {
 			"  " + doubleVal + "\n" +
 			"  " + booleanVal + "\n" +
 			"  " + stringVal1 + "\n" +
-			"  " + stringVal2 + "\n" +
 			"  " + bbyteVal + "\n" +
 			"  " + bcharVal + "\n" +
 			"  " + bshortVal + "\n" +
@@ -118,8 +113,7 @@ public class Primitives implements JSONable {
 			charVal + shortVal + intVal + (int) longVal +
 			(int) floatVal + (int) doubleVal +
 			(booleanVal? 1 : 0) +
-			(stringVal1 == null? 0 : stringVal1.hashCode()) +
-			(stringVal2 == null? 0 : stringVal2.hashCode());
+			(stringVal1 == null? 0 : stringVal1.hashCode());
 	}
 
 	@Override
@@ -138,7 +132,6 @@ public class Primitives implements JSONable {
 				this.doubleVal == o.doubleVal &&
 				this.booleanVal == o.booleanVal &&
 				(this.stringVal1 == null? o.stringVal1 == null : this.stringVal1.equals(o.stringVal1)) &&
-				(this.stringVal2 == null? o.stringVal2 == null : this.stringVal2.equals(o.stringVal2)) &&
 				this.bbyteVal.equals(o.bbyteVal) &&
 				this.bcharVal.equals(o.bcharVal) &&
 				this.bshortVal.equals(o.bshortVal) &&

@@ -372,5 +372,17 @@ public class SSJSJSTest {
 		final Class<?> clazz = NotSerializable.class;
 		SSJSJS.deserialize(obj, (Class<JSONable>) clazz);
 	}
+
+	@Test(expected = JSONSerializeException.class)
+	public void cannotSerializeNonNullableNullField() throws Exception {
+		final NotNullable obj = new NotNullable();
+		SSJSJS.serialize(obj);
+	}
+
+	@Test(expected = JSONDeserializeException.class)
+	public void cannotDeserializeNonNullableNullField() throws Exception {
+		final JSONObject obj = new JSONObject();
+		SSJSJS.deserialize(obj, NotNullable.class);
+	}
 }
 
